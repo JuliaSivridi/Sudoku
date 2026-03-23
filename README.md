@@ -18,9 +18,9 @@ A clean, minimal Sudoku app for Android built with Kotlin and Jetpack Compose.
 
 ## Screenshots
 
-| Menu | Game (light) | Game (dark) |
-|------|-------------|-------------|
-| _(coming soon)_ | _(coming soon)_ | _(coming soon)_ |
+| Light theme | Dark theme |
+|-------------|------------|
+| ![Light theme](screenshots/light.jpg) | ![Dark theme](screenshots/dark.jpg) |
 
 ## Tech Stack
 
