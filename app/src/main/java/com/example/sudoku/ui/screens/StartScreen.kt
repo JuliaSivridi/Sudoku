@@ -7,11 +7,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ChildCare
+import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Leaderboard
+import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.SentimentSatisfied
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -30,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -78,6 +86,31 @@ fun BottomNavBar(
             },
             label = { Text("Settings") }
         )
+    }
+}
+
+@Composable
+private fun MenuButton(
+    text: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth().height(56.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary
+        )
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = text, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 
@@ -132,65 +165,26 @@ fun StartScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Easy button
-            Button(
-                onClick = { onDifficultySelected(Difficulty.EASY) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Text(
-                    text = Difficulty.EASY.label,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
+            MenuButton(
+                text = Difficulty.EASY.label,
+                icon = Icons.Outlined.ChildCare,
+                onClick = { onDifficultySelected(Difficulty.EASY) }
+            )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Medium button
-            Button(
-                onClick = { onDifficultySelected(Difficulty.MEDIUM) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Text(
-                    text = Difficulty.MEDIUM.label,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
+            MenuButton(
+                text = Difficulty.MEDIUM.label,
+                icon = Icons.Outlined.SentimentSatisfied,
+                onClick = { onDifficultySelected(Difficulty.MEDIUM) }
+            )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Hard button
-            Button(
-                onClick = { onDifficultySelected(Difficulty.HARD) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Text(
-                    text = Difficulty.HARD.label,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+            MenuButton(
+                text = Difficulty.HARD.label,
+                icon = Icons.Outlined.Psychology,
+                onClick = { onDifficultySelected(Difficulty.HARD) }
+            )
 
-            // Divider + Continue button (only if saved game exists)
             HorizontalDivider(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -199,25 +193,12 @@ fun StartScreen(
             )
 
             if (hasSavedGame) {
-                Button(
-                    onClick = onContinueGame,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Text(
-                        text = "Continue",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
+                MenuButton(
+                    text = "Continue",
+                    icon = Icons.Outlined.PlayArrow,
+                    onClick = onContinueGame
+                )
                 Spacer(modifier = Modifier.height(8.dp))
-
                 HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -226,23 +207,11 @@ fun StartScreen(
                 )
             }
 
-            // Solver button
-            Button(
-                onClick = onSolverSelected,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Text(
-                    text = "Solver",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+            MenuButton(
+                text = "Solver",
+                icon = Icons.Outlined.EditNote,
+                onClick = onSolverSelected
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
         }
