@@ -4,23 +4,41 @@ A clean, minimal Sudoku app for Android built with Kotlin and Jetpack Compose.
 
 ---
 
-## Features
-
-- **Three difficulty levels** — Easy, Medium, Hard
-- **Notes mode** — fill cells with pencil marks in a 3×3 mini-grid layout; marks auto-clear when a digit is placed in the same row, column, or box
-- **Conflict highlighting** — digits that conflict with the same row, column, or box are shown in red
-- **Undo** — step back through every move all the way to the start
-- **Hints** — reveal a correct digit in any empty cell (unlimited)
-- **Auto-complete digit row** — once a digit is placed 9 times it disappears from the number pad; reappears if undone
-- **Solver** — enter any Sudoku puzzle and let the app solve it instantly
-- **Motivational finish screen** — a random encouraging message when the puzzle is complete
-- **Dark / light theme** — follows system setting automatically; dark gray background, white background, orange accent
-
 ## Screenshots
 
 | Light theme | Dark theme |
 |-------------|------------|
 | ![Light theme](screenshots/light.jpg) | ![Dark theme](screenshots/dark.jpg) |
+
+---
+
+## Features
+
+**Gameplay**
+- Three difficulty levels — Easy, Medium, Hard
+- Notes mode — pencil marks in a 3×3 mini-grid per cell; auto-clear when a digit is placed in the same row, column, or box
+- Conflict highlighting — wrong digits shown in red with a tinted cell background
+- Undo — step back through every move all the way to the start
+- Hints — reveal a correct digit in any empty cell (unlimited)
+- Auto-complete digit row — once a digit is placed 9 times it disappears from the number pad
+- Motivational finish screen — a random encouraging message on completion
+
+**Solver**
+- Enter any puzzle (from a newspaper, another app, etc.) and tap **Solve**
+
+**Save & Continue**
+- Current game saves automatically after every move
+- Resume from the main menu with the **Continue** button
+
+**Statistics**
+- Tracks completed games per difficulty (Easy / Medium / Hard)
+
+**Themes**
+- Four color themes: Orange, Green, Blue, Purple
+- Each theme colors the accent, digit highlights, and user-placed numbers
+- Dark / light mode follows system setting automatically
+
+---
 
 ## Tech Stack
 
@@ -30,8 +48,11 @@ A clean, minimal Sudoku app for Android built with Kotlin and Jetpack Compose.
 | UI | Jetpack Compose (Material 3) |
 | Architecture | ViewModel + StateFlow |
 | Navigation | Navigation Compose |
+| Persistence | SharedPreferences |
 | Icons | Material Icons Extended |
 | Min SDK | API 26 (Android 8.0) |
+
+---
 
 ## Building
 
@@ -46,11 +67,13 @@ A clean, minimal Sudoku app for Android built with Kotlin and Jetpack Compose.
 
 No API keys or external services required — everything runs on-device.
 
+---
+
 ## How to Play
 
 1. Pick a difficulty on the start screen
 2. Tap a digit in the number row, then tap a cell to place it
-3. Use **Notes** mode to pencil in candidates — they auto-clear as the board fills
+3. Use **Notes** to pencil in candidates — they auto-clear as the board fills
 4. Use **Undo** to step back, **Hint** to reveal a correct digit
 5. Finish the puzzle and collect your reward 🎉
 
