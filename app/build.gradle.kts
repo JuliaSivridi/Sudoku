@@ -12,7 +12,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.sudoku"
+        applicationId = "io.github.juliasivridi.sudoku"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

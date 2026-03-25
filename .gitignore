@@ -12,3 +12,5 @@ local.properties
 app/release/
 .claude/
 .private
+.play/*.apk
+.play/*.aab

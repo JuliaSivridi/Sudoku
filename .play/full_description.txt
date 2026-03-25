@@ -1,0 +1,30 @@
+A clean, ad-free Sudoku designed for a relaxing experience — no timers, no pressure, just the puzzle.
+
+DIFFICULTY LEVELS
+• Easy — great for a calm session or if you're new to Sudoku
+• Medium — a satisfying challenge for regular players
+• Hard — for when you want to focus deeply
+
+NOTES MODE
+Tap the Notes button to switch into notes mode. Each cell shows a compact 3×3 mini-grid so your pencil marks are always neatly positioned — digit 1 top-left, digit 9 bottom-right.
+When you place a digit, conflicting notes are removed automatically from the same row, column, and box.
+
+HINTS & SOLVER
+Stuck? Use the Hint button to reveal one correct digit. Or open the built-in Solver to enter any puzzle and find its solution instantly.
+
+SMART HIGHLIGHTING
+• Tap a cell to highlight all cells in the same row and column
+• Tap a digit to highlight all matching digits on the board
+• Conflicting digits are highlighted in red
+
+UNDO & CLEAR
+Undo any number of moves, all the way back to the start of the game. Clear a cell with a single tap.
+
+SAVE & CONTINUE
+Your game is saved automatically after every move. Come back later and continue exactly where you left off.
+
+THEMES
+Choose from four color themes — Orange, Green, Blue, and Purple — and switch between light and dark mode using your system setting.
+
+STATISTICS
+Keep track of how many puzzles you've completed at each difficulty level.
