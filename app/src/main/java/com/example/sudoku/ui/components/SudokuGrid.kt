@@ -201,24 +201,23 @@ private fun isInHighlightArea(state: GameState, row: Int, col: Int): Boolean {
     return row == selRow || col == selCol
 }
 
+// Конфликт: пользовательская ячейка совпадает с given-ячейкой в той же строке/столбце/квадрате.
+// Проверяем только given, чтобы не подсвечивать "чужие" ошибки пользователя.
 private fun hasConflict(board: List<List<Cell>>, row: Int, col: Int): Boolean {
     val cell = board[row][col]
     if (cell.isGiven || cell.value == 0) return false
     val value = cell.value
-    // Check row
     for (c in 0..8) {
-        if (c != col && board[row][c].value == value) return true
+        if (c != col && board[row][c].isGiven && board[row][c].value == value) return true
     }
-    // Check column
     for (r in 0..8) {
-        if (r != row && board[r][col].value == value) return true
+        if (r != row && board[r][col].isGiven && board[r][col].value == value) return true
     }
-    // Check 3x3 box
     val boxRow = (row / 3) * 3
     val boxCol = (col / 3) * 3
     for (r in boxRow until boxRow + 3) {
         for (c in boxCol until boxCol + 3) {
-            if ((r != row || c != col) && board[r][c].value == value) return true
+            if ((r != row || c != col) && board[r][c].isGiven && board[r][c].value == value) return true
         }
     }
     return false
