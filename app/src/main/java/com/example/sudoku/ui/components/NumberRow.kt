@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.sudoku.model.Cell
+import com.example.sudoku.ui.theme.CellDigitHighlightDark
+import com.example.sudoku.ui.theme.CellDigitHighlightLight
 import com.example.sudoku.ui.theme.GridInnerBorderDark
 import com.example.sudoku.ui.theme.GridInnerBorderLight
 import com.example.sudoku.ui.theme.Orange
@@ -55,7 +57,8 @@ fun NumberRow(
                         .weight(1f)
                         .aspectRatio(1f)
                         .background(
-                            if (isSelected && !isFull) Orange.copy(alpha = 0.15f)
+                            if (isSelected && !isFull)
+                                if (isDark) CellDigitHighlightDark else CellDigitHighlightLight
                             else Color.Transparent
                         )
                         .drawBehind {

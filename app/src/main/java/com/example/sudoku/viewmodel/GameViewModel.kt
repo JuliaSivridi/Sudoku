@@ -2,6 +2,7 @@ package com.example.sudoku.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.sudoku.data.GameSaveManager
 import com.example.sudoku.game.SudokuGenerator
 import com.example.sudoku.model.Cell
@@ -11,6 +12,7 @@ import com.example.sudoku.model.InputMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class GameViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -18,6 +20,18 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _state = MutableStateFlow(GameState())
     val state: StateFlow<GameState> = _state.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            state.collect { gameState ->
+                when {
+                    gameState.isComplete -> saveManager.clearSavedGame()
+                    gameState.board.any { row -> row.any { !it.isGiven && it.value != 0 } } ->
+                        saveManager.saveGame(gameState)
+                }
+            }
+        }
+    }
 
     // Начать новую игру
     fun startGame(difficulty: Difficulty) {
@@ -165,20 +179,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = newState.copy(isComplete = checkComplete(newState))
     }
 
-    // Save/load lifecycle
     override fun onCleared() {
-        val current = _state.value
-        if (current.isComplete) {
-            saveManager.clearSavedGame()
-        } else {
-            // Save only if the user has made at least one move (a non-given cell has been filled)
-            val hasUserInput = current.board.any { row ->
-                row.any { cell -> !cell.isGiven && cell.value != 0 }
-            }
-            if (hasUserInput) {
-                saveManager.saveGame(current)
-            }
-        }
         super.onCleared()
     }
 
