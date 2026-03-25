@@ -24,8 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.sudoku.model.Cell
 import com.example.sudoku.model.GameState
-import com.example.sudoku.ui.theme.CellDigitHighlightDark
-import com.example.sudoku.ui.theme.CellDigitHighlightLight
 import com.example.sudoku.ui.theme.CellHighlightDark
 import com.example.sudoku.ui.theme.CellHighlightLight
 import com.example.sudoku.ui.theme.CellSelectedDark
@@ -40,10 +38,9 @@ import com.example.sudoku.ui.theme.GridInnerBorderDark
 import com.example.sudoku.ui.theme.GridInnerBorderLight
 import com.example.sudoku.ui.theme.GridOuterBorderDark
 import com.example.sudoku.ui.theme.GridOuterBorderLight
+import com.example.sudoku.ui.theme.LocalAppThemeColors
 import com.example.sudoku.ui.theme.NoteNumberDark
 import com.example.sudoku.ui.theme.NoteNumberLight
-import com.example.sudoku.ui.theme.UserNumberDark
-import com.example.sudoku.ui.theme.UserNumberLight
 
 @Composable
 fun SudokuGrid(
@@ -52,6 +49,7 @@ fun SudokuGrid(
     isSolverMode: Boolean = false
 ) {
     val isDark = isSystemInDarkTheme()
+    val appColors = LocalAppThemeColors.current
     val outerBorder = if (isDark) GridOuterBorderDark else GridOuterBorderLight
     val innerBorder = if (isDark) GridInnerBorderDark else GridInnerBorderLight
 
@@ -113,7 +111,7 @@ fun SudokuGrid(
 
                         val bgColor = when {
                             isSelected -> if (isDark) CellSelectedDark else CellSelectedLight
-                            isDigitMatch -> if (isDark) CellDigitHighlightDark else CellDigitHighlightLight
+                            isDigitMatch -> if (isDark) appColors.cellDigitHighlightDark else appColors.cellDigitHighlightLight
                             isHighlighted -> if (isDark) CellHighlightDark else CellHighlightLight
                             else -> Color.Transparent
                         }
@@ -134,11 +132,11 @@ fun SudokuGrid(
                                 NotesGrid(notes = cell.notes, isDark = isDark)
                             } else if (cell.value != 0) {
                                 val textColor = when {
-                                    isSolverMode -> if (isDark) UserNumberDark else UserNumberLight
+                                    isSolverMode -> if (isDark) appColors.userNumberDark else appColors.userNumberLight
                                     cell.isGiven -> if (isDark) GivenNumberDark else GivenNumberLight
                                     !isSolverMode && hasConflict(state.board, row, col) ->
                                         if (isDark) ConflictColorDark else ConflictColorLight
-                                    else -> if (isDark) UserNumberDark else UserNumberLight
+                                    else -> if (isDark) appColors.userNumberDark else appColors.userNumberLight
                                 }
                                 Text(
                                     text = cell.value.toString(),

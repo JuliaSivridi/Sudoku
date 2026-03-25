@@ -1,5 +1,6 @@
 package com.example.sudoku.ui.theme
 
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 // Accent — мягкий тёплый оранжевый
@@ -46,3 +47,66 @@ val ConflictColorLight = Color(0xFFCC1515)   // яркий красный, св�
 val ConflictColorDark = Color(0xFFFF5252)    // яркий красный, тёмная тема
 val ConflictBgLight = Color(0x33CC1515)      // ~20% alpha красный фон, светлая тема
 val ConflictBgDark  = Color(0x80CC1515)      // ~50% alpha красный фон, тёмная тема
+
+// ── App color themes ────────────────────────────────────────────────────────
+
+enum class AppColorTheme(val displayName: String) {
+    ORANGE("Orange"),
+    GREEN("Green"),
+    BLUE("Blue"),
+    PURPLE("Purple")
+}
+
+data class AppThemeColors(
+    val accent: Color,                       // primary / buttons / titles / selected digit text
+    val accentVariant: Color,                // user digits in dark theme (lighter variant)
+    val cellDigitHighlightLight: Color,      // ~20% alpha tint, light theme
+    val cellDigitHighlightDark: Color,       // ~50% alpha tint, dark theme
+    val userNumberLight: Color,              // user-placed digits, light theme
+    val userNumberDark: Color,               // user-placed digits, dark theme
+)
+
+val OrangeThemeColors = AppThemeColors(
+    accent                  = Color(0xFFCF7A30),
+    accentVariant           = Color(0xFFE59A52),
+    cellDigitHighlightLight = Color(0x33CF7A30),
+    cellDigitHighlightDark  = Color(0x80CF7A30),
+    userNumberLight         = Color(0xFFCF7A30),
+    userNumberDark          = Color(0xFFE59A52),
+)
+
+val GreenThemeColors = AppThemeColors(
+    accent                  = Color(0xFF4D8B53),
+    accentVariant           = Color(0xFF79B57F),
+    cellDigitHighlightLight = Color(0x334D8B53),
+    cellDigitHighlightDark  = Color(0x804D8B53),
+    userNumberLight         = Color(0xFF4D8B53),
+    userNumberDark          = Color(0xFF79B57F),
+)
+
+val BlueThemeColors = AppThemeColors(
+    accent                  = Color(0xFF3D73B0),
+    accentVariant           = Color(0xFF6B9FD4),
+    cellDigitHighlightLight = Color(0x333D73B0),
+    cellDigitHighlightDark  = Color(0x803D73B0),
+    userNumberLight         = Color(0xFF3D73B0),
+    userNumberDark          = Color(0xFF6B9FD4),
+)
+
+val PurpleThemeColors = AppThemeColors(
+    accent                  = Color(0xFF7A4FA3),
+    accentVariant           = Color(0xFFA47BC8),
+    cellDigitHighlightLight = Color(0x337A4FA3),
+    cellDigitHighlightDark  = Color(0x807A4FA3),
+    userNumberLight         = Color(0xFF7A4FA3),
+    userNumberDark          = Color(0xFFA47BC8),
+)
+
+fun AppColorTheme.themeColors(): AppThemeColors = when (this) {
+    AppColorTheme.ORANGE -> OrangeThemeColors
+    AppColorTheme.GREEN  -> GreenThemeColors
+    AppColorTheme.BLUE   -> BlueThemeColors
+    AppColorTheme.PURPLE -> PurpleThemeColors
+}
+
+val LocalAppThemeColors = compositionLocalOf { OrangeThemeColors }

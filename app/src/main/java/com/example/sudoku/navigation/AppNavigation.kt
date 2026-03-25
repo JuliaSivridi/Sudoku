@@ -2,6 +2,8 @@ package com.example.sudoku.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -17,6 +19,7 @@ import com.example.sudoku.ui.screens.StartScreen
 import com.example.sudoku.ui.screens.StatisticsScreen
 import com.example.sudoku.viewmodel.GameViewModel
 import com.example.sudoku.viewmodel.SolverViewModel
+import com.example.sudoku.viewmodel.ThemeViewModel
 
 object Routes {
     const val START = "start"
@@ -32,7 +35,7 @@ object Routes {
 }
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(themeViewModel: ThemeViewModel) {
     val navController = rememberNavController()
     val viewModel: GameViewModel = viewModel()
     val solverViewModel: SolverViewModel = viewModel()
@@ -142,7 +145,10 @@ fun AppNavigation() {
         }
 
         composable(Routes.SETTINGS) {
+            val currentTheme by themeViewModel.currentTheme.collectAsState()
             SettingsScreen(
+                currentTheme = currentTheme,
+                onThemeSelected = { themeViewModel.setTheme(it) },
                 onHomeSelected = {
                     navController.navigate(Routes.START) {
                         popUpTo(Routes.START) { inclusive = true }

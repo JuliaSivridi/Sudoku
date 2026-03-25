@@ -20,11 +20,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.sudoku.model.Cell
-import com.example.sudoku.ui.theme.CellDigitHighlightDark
-import com.example.sudoku.ui.theme.CellDigitHighlightLight
 import com.example.sudoku.ui.theme.GridInnerBorderDark
 import com.example.sudoku.ui.theme.GridInnerBorderLight
-import com.example.sudoku.ui.theme.Orange
+import com.example.sudoku.ui.theme.LocalAppThemeColors
 
 @Composable
 fun NumberRow(
@@ -34,6 +32,7 @@ fun NumberRow(
 ) {
     val isDark = isSystemInDarkTheme()
     val borderColor = if (isDark) GridInnerBorderDark else GridInnerBorderLight
+    val appColors = LocalAppThemeColors.current
 
     val digitCounts = IntArray(10)
     for (row in board) {
@@ -58,7 +57,7 @@ fun NumberRow(
                         .aspectRatio(1f)
                         .background(
                             if (isSelected && !isFull)
-                                if (isDark) CellDigitHighlightDark else CellDigitHighlightLight
+                                if (isDark) appColors.cellDigitHighlightDark else appColors.cellDigitHighlightLight
                             else Color.Transparent
                         )
                         .drawBehind {
@@ -82,7 +81,7 @@ fun NumberRow(
                             text = digit.toString(),
                             fontSize = 22.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
-                            color = if (isSelected) Orange
+                            color = if (isSelected) appColors.accent
                                     else MaterialTheme.colorScheme.onBackground
                         )
                     }
