@@ -29,18 +29,22 @@ jobs:
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > ${{ github.workspace }}/keystore.jks
 
-      - name: Build release AAB
+      - name: Build release APK and AAB
         env:
           KEYSTORE_PATH: ${{ github.workspace }}/keystore.jks
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew bundleRelease
+        run: ./gradlew assembleRelease bundleRelease
 
-      - name: Rename AAB
-        run: mv app/build/outputs/bundle/release/app-release.aab app/build/outputs/bundle/release/stler-sudoku.aab
+      - name: Rename APK and AAB
+        run: |
+          mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/stler-sudoku.apk
+          mv app/build/outputs/bundle/release/app-release.aab app/build/outputs/bundle/release/stler-sudoku.aab
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/bundle/release/stler-sudoku.aab
+          files: |
+            app/build/outputs/apk/release/stler-sudoku.apk
+            app/build/outputs/bundle/release/stler-sudoku.aab
