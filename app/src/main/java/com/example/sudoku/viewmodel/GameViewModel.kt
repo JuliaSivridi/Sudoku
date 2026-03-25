@@ -1,6 +1,8 @@
 package com.example.sudoku.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import com.example.sudoku.data.GameSaveManager
 import com.example.sudoku.game.SudokuGenerator
 import com.example.sudoku.model.Cell
 import com.example.sudoku.model.Difficulty
@@ -10,7 +12,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class GameViewModel : ViewModel() {
+class GameViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val saveManager = GameSaveManager(application)
 
     private val _state = MutableStateFlow(GameState())
     val state: StateFlow<GameState> = _state.asStateFlow()
@@ -22,6 +26,18 @@ class GameViewModel : ViewModel() {
             board = board,
             solution = solution,
             difficulty = difficulty
+        )
+    }
+
+    // Загрузить сохранённую игру
+    fun loadSavedGame() {
+        val loaded = saveManager.loadGame() ?: return
+        _state.value = loaded.copy(
+            selectedCell = null,
+            selectedDigit = null,
+            inputMode = InputMode.NORMAL,
+            isComplete = false,
+            undoStack = emptyList()
         )
     }
 
@@ -147,6 +163,23 @@ class GameViewModel : ViewModel() {
             undoStack = undoStack
         )
         _state.value = newState.copy(isComplete = checkComplete(newState))
+    }
+
+    // Save/load lifecycle
+    override fun onCleared() {
+        val current = _state.value
+        if (current.isComplete) {
+            saveManager.clearSavedGame()
+        } else {
+            // Save only if the user has made at least one move (a non-given cell has been filled)
+            val hasUserInput = current.board.any { row ->
+                row.any { cell -> !cell.isGiven && cell.value != 0 }
+            }
+            if (hasUserInput) {
+                saveManager.saveGame(current)
+            }
+        }
+        super.onCleared()
     }
 
     // Убрать цифру digit из заметок в той же строке и столбце.

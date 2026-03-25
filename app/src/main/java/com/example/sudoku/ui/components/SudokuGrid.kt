@@ -24,7 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.sudoku.model.Cell
 import com.example.sudoku.model.GameState
-import com.example.sudoku.ui.theme.CellDigitHighlight
+import com.example.sudoku.ui.theme.CellDigitHighlightDark
+import com.example.sudoku.ui.theme.CellDigitHighlightLight
 import com.example.sudoku.ui.theme.CellHighlightDark
 import com.example.sudoku.ui.theme.CellHighlightLight
 import com.example.sudoku.ui.theme.CellSelectedDark
@@ -109,7 +110,7 @@ fun SudokuGrid(
 
                         val bgColor = when {
                             isSelected -> if (isDark) CellSelectedDark else CellSelectedLight
-                            isDigitMatch -> CellDigitHighlight
+                            isDigitMatch -> if (isDark) CellDigitHighlightDark else CellDigitHighlightLight
                             isHighlighted -> if (isDark) CellHighlightDark else CellHighlightLight
                             else -> Color.Transparent
                         }

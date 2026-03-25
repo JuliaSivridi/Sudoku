@@ -9,52 +9,132 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Leaderboard
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.sudoku.data.GameSaveManager
 import com.example.sudoku.model.Difficulty
+
+@Composable
+fun BottomNavBar(
+    currentTab: String,
+    onHomeSelected: () -> Unit,
+    onStatisticsSelected: () -> Unit,
+    onSettingsSelected: () -> Unit,
+) {
+    NavigationBar {
+        NavigationBarItem(
+            selected = currentTab == "home",
+            onClick = onHomeSelected,
+            icon = {
+                Icon(
+                    imageVector = Icons.Outlined.Home,
+                    contentDescription = "Home"
+                )
+            },
+            label = { Text("Home") }
+        )
+        NavigationBarItem(
+            selected = currentTab == "stats",
+            onClick = onStatisticsSelected,
+            icon = {
+                Icon(
+                    imageVector = Icons.Outlined.Leaderboard,
+                    contentDescription = "Stats"
+                )
+            },
+            label = { Text("Stats") }
+        )
+        NavigationBarItem(
+            selected = currentTab == "settings",
+            onClick = onSettingsSelected,
+            icon = {
+                Icon(
+                    imageVector = Icons.Outlined.Settings,
+                    contentDescription = "Settings"
+                )
+            },
+            label = { Text("Settings") }
+        )
+    }
+}
 
 @Composable
 fun StartScreen(
     onDifficultySelected: (Difficulty) -> Unit,
-    onSolverSelected: () -> Unit = {}
+    onContinueGame: () -> Unit,
+    onSolverSelected: () -> Unit,
+    onStatisticsSelected: () -> Unit,
+    onSettingsSelected: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .padding(horizontal = 48.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "SUDOKU",
-            fontSize = 48.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
+    val context = LocalContext.current
+    var hasSavedGame by remember { mutableStateOf(false) }
 
-        Spacer(modifier = Modifier.height(8.dp))
+    LaunchedEffect(Unit) {
+        hasSavedGame = GameSaveManager(context).hasSavedGame()
+    }
 
-        Text(
-            text = "Select difficulty",
-            fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-        )
+    Scaffold(
+        bottomBar = {
+            BottomNavBar(
+                currentTab = "home",
+                onHomeSelected = {},
+                onStatisticsSelected = onStatisticsSelected,
+                onSettingsSelected = onSettingsSelected,
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .statusBarsPadding()
+                .padding(horizontal = 48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "SUDOKU",
+                fontSize = 48.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
 
-        Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        Difficulty.entries.forEach { difficulty ->
+            Text(
+                text = "Select difficulty",
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            // Easy button
             Button(
-                onClick = { onDifficultySelected(difficulty) },
+                onClick = { onDifficultySelected(Difficulty.EASY) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -64,39 +144,107 @@ fun StartScreen(
                 )
             ) {
                 Text(
-                    text = difficulty.label,
+                    text = Difficulty.EASY.label,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold
                 )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Medium button
+            Button(
+                onClick = { onDifficultySelected(Difficulty.MEDIUM) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(
+                    text = Difficulty.MEDIUM.label,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Hard button
+            Button(
+                onClick = { onDifficultySelected(Difficulty.HARD) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(
+                    text = Difficulty.HARD.label,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            // Divider + Continue button (only if saved game exists)
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.15f)
+            )
+
+            if (hasSavedGame) {
+                Button(
+                    onClick = onContinueGame,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text(
+                        text = "Continue",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.15f)
+                )
+            }
+
+            // Solver button
+            Button(
+                onClick = onSolverSelected,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(
+                    text = "Solver",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
         }
-
-        HorizontalDivider(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.15f)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Button(
-            onClick = onSolverSelected,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            )
-        ) {
-            Text(
-                text = "Solver",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }
