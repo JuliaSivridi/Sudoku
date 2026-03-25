@@ -44,3 +44,5 @@ val NoteNumberDark = Color(0xFF9E9E9E)       // заметки, тёмная т�
 // Conflict highlight colors
 val ConflictColorLight = Color(0xFFCC1515)   // яркий красный, светлая тема
 val ConflictColorDark = Color(0xFFFF5252)    // яркий красный, тёмная тема
+val ConflictBgLight = Color(0x33CC1515)      // ~20% alpha красный фон, светлая тема
+val ConflictBgDark  = Color(0x80CC1515)      // ~50% alpha красный фон, тёмная тема

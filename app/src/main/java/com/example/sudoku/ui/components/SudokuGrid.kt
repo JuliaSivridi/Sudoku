@@ -30,6 +30,8 @@ import com.example.sudoku.ui.theme.CellHighlightDark
 import com.example.sudoku.ui.theme.CellHighlightLight
 import com.example.sudoku.ui.theme.CellSelectedDark
 import com.example.sudoku.ui.theme.CellSelectedLight
+import com.example.sudoku.ui.theme.ConflictBgDark
+import com.example.sudoku.ui.theme.ConflictBgLight
 import com.example.sudoku.ui.theme.ConflictColorDark
 import com.example.sudoku.ui.theme.ConflictColorLight
 import com.example.sudoku.ui.theme.GivenNumberDark
@@ -107,6 +109,7 @@ fun SudokuGrid(
                         val isDigitMatch = state.selectedDigit != null &&
                                 cell.value != 0 &&
                                 cell.value == state.selectedDigit
+                        val isConflict = !isSolverMode && hasConflict(state.board, row, col)
 
                         val bgColor = when {
                             isSelected -> if (isDark) CellSelectedDark else CellSelectedLight
@@ -114,12 +117,16 @@ fun SudokuGrid(
                             isHighlighted -> if (isDark) CellHighlightDark else CellHighlightLight
                             else -> Color.Transparent
                         }
+                        val conflictBg = if (isConflict) {
+                            if (isDark) ConflictBgDark else ConflictBgLight
+                        } else Color.Transparent
 
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight()
                                 .background(bgColor)
+                                .background(conflictBg)
                                 .clickable { onCellTap(row, col) },
                             contentAlignment = Alignment.Center
                         ) {

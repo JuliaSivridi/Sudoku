@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.sudoku.data.GameSaveManager
+import com.example.sudoku.data.StatsManager
 import com.example.sudoku.game.SudokuGenerator
 import com.example.sudoku.model.Cell
 import com.example.sudoku.model.Difficulty
@@ -17,6 +18,8 @@ import kotlinx.coroutines.launch
 class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private val saveManager = GameSaveManager(application)
+    private val statsManager = StatsManager(application)
+    private var statsRecorded = false
 
     private val _state = MutableStateFlow(GameState())
     val state: StateFlow<GameState> = _state.asStateFlow()
@@ -25,7 +28,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             state.collect { gameState ->
                 when {
-                    gameState.isComplete -> saveManager.clearSavedGame()
+                    gameState.isComplete -> {
+                        saveManager.clearSavedGame()
+                        if (!statsRecorded) {
+                            statsRecorded = true
+                            statsManager.increment(gameState.difficulty)
+                        }
+                    }
                     gameState.board.any { row -> row.any { !it.isGiven && it.value != 0 } } ->
                         saveManager.saveGame(gameState)
                 }
@@ -35,6 +44,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     // Начать новую игру
     fun startGame(difficulty: Difficulty) {
+        statsRecorded = false
         val (board, solution) = SudokuGenerator.generate(difficulty)
         _state.value = GameState(
             board = board,
@@ -45,6 +55,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     // Загрузить сохранённую игру
     fun loadSavedGame() {
+        statsRecorded = false
         val loaded = saveManager.loadGame() ?: return
         _state.value = loaded.copy(
             selectedCell = null,
