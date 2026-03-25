@@ -163,6 +163,23 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
+    // Авто-заметки: для каждой пустой ячейки вычислить и заполнить все допустимые цифры
+    fun autoNotes() {
+        val current = _state.value
+        val undoStack = buildUndoStack(current)
+        val newBoard = current.board.mapIndexed { r, row ->
+            row.mapIndexed { c, cell ->
+                if (cell.value == 0) {
+                    val possible = (1..9).filter { digit ->
+                        canPlace(current.board, r, c, digit)
+                    }.toSet()
+                    cell.copy(notes = possible)
+                } else cell
+            }
+        }
+        _state.value = current.copy(board = newBoard, undoStack = undoStack)
+    }
+
     // Подсказка: заполнить одну пустую ячейку
     fun hint() {
         val current = _state.value
@@ -222,6 +239,20 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private fun deselectIfFull(digit: Int, board: List<List<Cell>>): Int? {
         val count = board.flatten().count { it.value == digit }
         return if (count >= 9) null else digit
+    }
+
+    // Проверить, можно ли поставить digit в ячейку (row, col)
+    private fun canPlace(board: List<List<Cell>>, row: Int, col: Int, digit: Int): Boolean {
+        if (board[row].any { it.value == digit }) return false
+        if (board.any { it[col].value == digit }) return false
+        val boxRow = (row / 3) * 3
+        val boxCol = (col / 3) * 3
+        for (r in boxRow until boxRow + 3) {
+            for (c in boxCol until boxCol + 3) {
+                if (board[r][c].value == digit) return false
+            }
+        }
+        return true
     }
 
     // Построить стек отмены: добавить текущую доску, ограничить глубину 50

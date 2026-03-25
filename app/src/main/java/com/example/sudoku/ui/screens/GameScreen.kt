@@ -92,6 +92,7 @@ fun GameScreen(
             onUndo = { viewModel.undo() },
             onToggleErase = { viewModel.toggleErase() },
             onToggleNotes = { viewModel.toggleNotes() },
+            onAutoNotes = { viewModel.autoNotes() },
             onHint = { viewModel.hint() }
         )
 

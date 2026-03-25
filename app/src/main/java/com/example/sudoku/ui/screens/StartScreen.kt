@@ -28,8 +28,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.Color
+import com.example.sudoku.ui.theme.LocalAppThemeColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -54,6 +57,13 @@ fun BottomNavBar(
     onStatisticsSelected: () -> Unit,
     onSettingsSelected: () -> Unit,
 ) {
+    val appColors = LocalAppThemeColors.current
+    val itemColors = NavigationBarItemDefaults.colors(
+        selectedIconColor = appColors.accent,
+        unselectedIconColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+        indicatorColor = Color.Transparent
+    )
+
     NavigationBar {
         NavigationBarItem(
             selected = currentTab == "home",
@@ -61,10 +71,11 @@ fun BottomNavBar(
             icon = {
                 Icon(
                     imageVector = Icons.Outlined.Home,
-                    contentDescription = "Home"
+                    contentDescription = "Home",
+                    modifier = Modifier.size(28.dp)
                 )
             },
-            label = { Text("Home") }
+            colors = itemColors
         )
         NavigationBarItem(
             selected = currentTab == "stats",
@@ -72,10 +83,11 @@ fun BottomNavBar(
             icon = {
                 Icon(
                     imageVector = Icons.Outlined.Leaderboard,
-                    contentDescription = "Stats"
+                    contentDescription = "Stats",
+                    modifier = Modifier.size(28.dp)
                 )
             },
-            label = { Text("Stats") }
+            colors = itemColors
         )
         NavigationBarItem(
             selected = currentTab == "settings",
@@ -83,10 +95,11 @@ fun BottomNavBar(
             icon = {
                 Icon(
                     imageVector = Icons.Outlined.Settings,
-                    contentDescription = "Settings"
+                    contentDescription = "Settings",
+                    modifier = Modifier.size(28.dp)
                 )
             },
-            label = { Text("Settings") }
+            colors = itemColors
         )
     }
 }

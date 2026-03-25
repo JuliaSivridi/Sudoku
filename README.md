@@ -16,7 +16,9 @@ A clean, minimal Sudoku app for Android built with Kotlin and Jetpack Compose.
 
 **Gameplay**
 - Three difficulty levels — Easy, Medium, Hard
+- Three difficulty levels — Easy, Medium, Hard
 - Notes mode — pencil marks in a 3×3 mini-grid per cell; auto-clear when a digit is placed in the same row, column, or box
+- Auto-notes — fill in all valid candidates for every empty cell in one tap
 - Conflict highlighting — wrong digits shown in red with a tinted cell background
 - Undo — step back through every move all the way to the start
 - Hints — reveal a correct digit in any empty cell (unlimited)
@@ -73,7 +75,7 @@ No API keys or external services required — everything runs on-device.
 
 1. Pick a difficulty on the start screen
 2. Tap a digit in the number row, then tap a cell to place it
-3. Use **Notes** to pencil in candidates — they auto-clear as the board fills
+3. Use **Notes** to pencil in candidates — they auto-clear as the board fills; tap **Auto** to fill all valid candidates at once
 4. Use **Undo** to step back, **Hint** to reveal a correct digit
 5. Finish the puzzle and collect your reward 🎉
 
