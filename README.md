@@ -16,7 +16,6 @@ A clean, minimal Sudoku app for Android built with Kotlin and Jetpack Compose.
 
 **Gameplay**
 - Three difficulty levels — Easy, Medium, Hard
-- Three difficulty levels — Easy, Medium, Hard
 - Notes mode — pencil marks in a 3×3 mini-grid per cell; auto-clear when a digit is placed in the same row, column, or box
 - Auto-notes — fill in all valid candidates for every empty cell in one tap
 - Conflict highlighting — wrong digits shown in red with a tinted cell background
