@@ -129,6 +129,7 @@ fun SolverScreen(
         NumberRow(
             board = state.board,
             selectedDigit = state.selectedDigit,
+            showSelection = true,
             onDigitSelected = { digit -> viewModel.selectDigit(digit) }
         )
 
