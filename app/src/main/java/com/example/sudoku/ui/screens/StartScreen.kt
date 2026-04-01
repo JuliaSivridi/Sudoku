@@ -23,7 +23,6 @@ import androidx.compose.material.icons.outlined.SentimentSatisfied
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -179,15 +178,23 @@ fun StartScreen(
                 color = MaterialTheme.colorScheme.primary
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            if (hasSavedGame) {
+                Spacer(modifier = Modifier.height(16.dp))
+                MenuButton(
+                    text = "Continue",
+                    icon = Icons.Outlined.PlayArrow,
+                    onClick = onContinueGame
+                )
+            }
+
+            Spacer(modifier = Modifier.height(56.dp))
 
             Text(
                 text = "Select difficulty",
                 fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
             )
-
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             MenuButton(
                 text = Difficulty.EASY.label,
@@ -209,35 +216,13 @@ fun StartScreen(
                 onClick = { onDifficultySelected(Difficulty.HARD) }
             )
 
-            HorizontalDivider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.15f)
-            )
-
-            if (hasSavedGame) {
-                MenuButton(
-                    text = "Continue",
-                    icon = Icons.Outlined.PlayArrow,
-                    onClick = onContinueGame
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                HorizontalDivider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.15f)
-                )
-            }
+            Spacer(modifier = Modifier.height(56.dp))
 
             MenuButton(
                 text = "Solver",
                 icon = Icons.Outlined.Bolt,
                 onClick = onSolverSelected
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

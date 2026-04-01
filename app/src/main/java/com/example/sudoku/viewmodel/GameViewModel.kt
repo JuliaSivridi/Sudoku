@@ -108,7 +108,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                         undoStack = undoStack
                     )
                 } else {
-                    _state.value = current.copy(selectedCell = Pair(row, col))
+                    val newDigit = if (cell.value != 0) cell.value else current.selectedDigit
+                    _state.value = current.copy(selectedCell = Pair(row, col), selectedDigit = newDigit)
                 }
             }
             InputMode.NORMAL -> {
@@ -126,7 +127,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     )
                     _state.value = newState.copy(isComplete = checkComplete(newState))
                 } else {
-                    _state.value = current.copy(selectedCell = Pair(row, col))
+                    val newDigit = if (cell.value != 0) cell.value else current.selectedDigit
+                    _state.value = current.copy(selectedCell = Pair(row, col), selectedDigit = newDigit)
                 }
             }
         }

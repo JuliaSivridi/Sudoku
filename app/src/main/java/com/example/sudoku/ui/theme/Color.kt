@@ -4,8 +4,8 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 // Accent — мягкий тёплый оранжевый
-val Orange = Color(0xFFCF7A30)
-val OrangeLight = Color(0xFFE59A52)
+val Orange = Color(0xFFE07E38)
+val OrangeLight = Color(0xFFE8935A)
 
 // Light theme
 val BackgroundLight = Color(0xFFFFFFFF)
@@ -13,8 +13,8 @@ val SurfaceLight = Color(0xFFFFFFFF)
 val OnBackgroundLight = Color(0xFF1C1C1C)
 
 // Dark theme
-val BackgroundDark = Color(0xFF212121)
-val SurfaceDark = Color(0xFF2C2C2C)
+val BackgroundDark = Color(0xFF1C1C1C)
+val SurfaceDark = Color(0xFF363636)
 val OnBackgroundDark = Color(0xFFEEEEEE)
 
 // Grid borders — светлая тема
@@ -37,8 +37,8 @@ val CellDigitHighlightDark = Color(0x80CF7A30)   // 50% alpha Orange, тёмна
 // Number colors
 val GivenNumberLight = Color(0xFF1C1C1C)     // системные цифры, светлая тема
 val GivenNumberDark = Color(0xFFEEEEEE)      // системные цифры, тёмная тема
-val UserNumberLight = Color(0xFFCF7A30)      // пользовательские цифры, светлая тема — оранжевый
-val UserNumberDark = Color(0xFFE59A52)       // пользовательские цифры, тёмная тема — светлый оранжевый
+val UserNumberLight = Color(0xFFE07E38)      // пользовательские цифры, светлая тема — оранжевый
+val UserNumberDark = Color(0xFFE8935A)       // пользовательские цифры, тёмная тема — светлый оранжевый
 val NoteNumberLight = Color(0xFF909090)      // заметки, светлая тема
 val NoteNumberDark = Color(0xFF9E9E9E)       // заметки, тёмная тема
 
@@ -67,12 +67,12 @@ data class AppThemeColors(
 )
 
 val OrangeThemeColors = AppThemeColors(
-    accent                  = Color(0xFFCF7A30),
-    accentVariant           = Color(0xFFE59A52),
+    accent                  = Color(0xFFE07E38),
+    accentVariant           = Color(0xFFE8935A),
     cellDigitHighlightLight = Color(0x33CF7A30),
     cellDigitHighlightDark  = Color(0x80CF7A30),
-    userNumberLight         = Color(0xFFCF7A30),
-    userNumberDark          = Color(0xFFE59A52),
+    userNumberLight         = Color(0xFFE07E38),
+    userNumberDark          = Color(0xFFE8935A),
 )
 
 val GreenThemeColors = AppThemeColors(

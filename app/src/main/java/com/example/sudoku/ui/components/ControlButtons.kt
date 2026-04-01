@@ -91,6 +91,7 @@ private fun ControlButton(
 
     Column(
         modifier = modifier
+            .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(vertical = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
