@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.sudoku.model.InputPreference
 import com.example.sudoku.ui.components.ControlButtons
 import com.example.sudoku.ui.components.NumberRow
 import com.example.sudoku.ui.components.SudokuGrid
@@ -32,6 +33,7 @@ import com.example.sudoku.viewmodel.GameViewModel
 @Composable
 fun GameScreen(
     viewModel: GameViewModel,
+    inputPreference: InputPreference,
     onGameComplete: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -78,10 +80,15 @@ fun GameScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        val isCellFirst = inputPreference == InputPreference.CELL_FIRST
+
         // Сетка судоку
         SudokuGrid(
             state = state,
-            onCellTap = { row, col -> viewModel.onCellTap(row, col) }
+            onCellTap = { row, col ->
+                if (isCellFirst) viewModel.selectCell(row, col)
+                else viewModel.onCellTap(row, col)
+            }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -89,8 +96,12 @@ fun GameScreen(
         // Кнопки управления
         ControlButtons(
             inputMode = state.inputMode,
+            isCellFirst = isCellFirst,
             onUndo = { viewModel.undo() },
-            onToggleErase = { viewModel.toggleErase() },
+            onToggleErase = {
+                if (isCellFirst) viewModel.eraseSelected()
+                else viewModel.toggleErase()
+            },
             onToggleNotes = { viewModel.toggleNotes() },
             onAutoNotes = { viewModel.autoNotes() },
             onHint = { viewModel.hint() }
@@ -102,7 +113,11 @@ fun GameScreen(
         NumberRow(
             board = state.board,
             selectedDigit = state.selectedDigit,
-            onDigitSelected = { digit -> viewModel.selectDigit(digit) }
+            showSelection = !isCellFirst,
+            onDigitSelected = { digit ->
+                if (isCellFirst) viewModel.placeDigit(digit)
+                else viewModel.selectDigit(digit)
+            }
         )
 
         Spacer(modifier = Modifier.weight(1f))

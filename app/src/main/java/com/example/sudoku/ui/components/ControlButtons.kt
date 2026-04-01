@@ -30,6 +30,7 @@ import com.example.sudoku.model.InputMode
 @Composable
 fun ControlButtons(
     inputMode: InputMode,
+    isCellFirst: Boolean = false,
     onUndo: () -> Unit,
     onToggleErase: () -> Unit,
     onToggleNotes: () -> Unit,
@@ -50,7 +51,8 @@ fun ControlButtons(
         ControlButton(
             icon = Icons.Filled.Close,
             label = "Clear",
-            isActive = inputMode == InputMode.ERASE,
+            // В Cell First Erase — разовое действие, не режим; всегда выглядит неактивным
+            isActive = !isCellFirst && inputMode == InputMode.ERASE,
             onClick = onToggleErase,
             modifier = Modifier.weight(1f)
         )

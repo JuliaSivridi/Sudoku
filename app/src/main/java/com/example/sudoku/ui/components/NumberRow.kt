@@ -29,6 +29,7 @@ import com.example.sudoku.ui.theme.LocalAppThemeColors
 fun NumberRow(
     board: List<List<Cell>>,
     selectedDigit: Int?,
+    showSelection: Boolean,      // false в режиме Cell First — цифры не подсвечиваются
     onDigitSelected: (Int) -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
@@ -74,7 +75,7 @@ fun NumberRow(
                             .weight(1f)
                             .aspectRatio(2f)
                             .background(
-                                if (isSelected && !isFull)
+                                if (showSelection && isSelected && !isFull)
                                     if (isDark) appColors.cellDigitHighlightDark else appColors.cellDigitHighlightLight
                                 else Color.Transparent
                             )
@@ -95,11 +96,12 @@ fun NumberRow(
                         contentAlignment = Alignment.Center
                     ) {
                         if (!isFull) {
+                            val highlighted = showSelection && isSelected
                             Text(
                                 text = digit.toString(),
                                 fontSize = 32.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
-                                color = if (isSelected) appColors.accent
+                                fontWeight = if (highlighted) FontWeight.Bold else FontWeight.SemiBold,
+                                color = if (highlighted) appColors.accent
                                         else MaterialTheme.colorScheme.onBackground
                             )
                         }

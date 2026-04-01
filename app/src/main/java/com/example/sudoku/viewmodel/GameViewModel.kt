@@ -134,6 +134,74 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // ── Cell First: выбрать ячейку (без размещения цифры) ──────────────────────
+    fun selectCell(row: Int, col: Int) {
+        val current = _state.value
+        val cell = current.board[row][col]
+        val newDigit = if (cell.value != 0) cell.value else null
+        _state.value = current.copy(
+            selectedCell = Pair(row, col),
+            selectedDigit = newDigit
+        )
+    }
+
+    // Cell First: поставить цифру или переключить заметку в выбранной ячейке
+    fun placeDigit(digit: Int) {
+        val current = _state.value
+        val selCell = current.selectedCell ?: return
+        val (row, col) = selCell
+        val cell = current.board[row][col]
+        if (cell.isGiven) return
+
+        when (current.inputMode) {
+            InputMode.NOTES -> {
+                if (cell.value == 0) {
+                    val undoStack = buildUndoStack(current)
+                    val newBoard = current.board.updateCell(row, col) {
+                        val newNotes = if (digit in it.notes) it.notes - digit else it.notes + digit
+                        it.copy(notes = newNotes)
+                    }
+                    _state.value = current.copy(board = newBoard, selectedCell = selCell, undoStack = undoStack)
+                }
+            }
+            InputMode.NORMAL -> {
+                if (cell.value == 0) {
+                    val undoStack = buildUndoStack(current)
+                    var newBoard = current.board.updateCell(row, col) {
+                        Cell(value = digit, isGiven = false)
+                    }
+                    newBoard = cleanNotesAfterPlacement(newBoard, row, col, digit)
+                    val newState = current.copy(
+                        board = newBoard,
+                        selectedCell = selCell,
+                        selectedDigit = deselectIfFull(digit, newBoard),
+                        undoStack = undoStack
+                    )
+                    _state.value = newState.copy(isComplete = checkComplete(newState))
+                }
+            }
+            InputMode.ERASE -> { /* не используется в Cell First */ }
+        }
+    }
+
+    // Cell First: стереть выбранную ячейку напрямую (без переключения режима)
+    fun eraseSelected() {
+        val current = _state.value
+        val selCell = current.selectedCell ?: return
+        val (row, col) = selCell
+        val cell = current.board[row][col]
+        if (cell.isGiven) return
+        if (cell.value == 0 && cell.notes.isEmpty()) return
+        val undoStack = buildUndoStack(current)
+        val newBoard = current.board.updateCell(row, col) { Cell() }
+        _state.value = current.copy(
+            board = newBoard,
+            selectedCell = selCell,
+            selectedDigit = null,
+            undoStack = undoStack
+        )
+    }
+
     // Переключить режим стирания
     fun toggleErase() {
         val current = _state.value

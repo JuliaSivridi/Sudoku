@@ -17,6 +17,9 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.sudoku.model.InputPreference
 import com.example.sudoku.ui.theme.AppColorTheme
 import com.example.sudoku.ui.theme.themeColors
 
@@ -32,6 +36,8 @@ import com.example.sudoku.ui.theme.themeColors
 fun SettingsScreen(
     currentTheme: AppColorTheme,
     onThemeSelected: (AppColorTheme) -> Unit,
+    currentInputPreference: InputPreference,
+    onInputPreferenceSelected: (InputPreference) -> Unit,
     onHomeSelected: () -> Unit,
     onStatisticsSelected: () -> Unit,
 ) {
@@ -60,7 +66,35 @@ fun SettingsScreen(
                 color = MaterialTheme.colorScheme.primary
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text(
+                text = "Input mode",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                SegmentedButton(
+                    selected = currentInputPreference == InputPreference.NUMBER_FIRST,
+                    onClick = { onInputPreferenceSelected(InputPreference.NUMBER_FIRST) },
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                ) {
+                    Text("Number first", fontSize = 15.sp)
+                }
+                SegmentedButton(
+                    selected = currentInputPreference == InputPreference.CELL_FIRST,
+                    onClick = { onInputPreferenceSelected(InputPreference.CELL_FIRST) },
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                ) {
+                    Text("Cell first", fontSize = 15.sp)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
 
             Text(
                 text = "Theme",

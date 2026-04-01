@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.sudoku.navigation.AppNavigation
 import com.example.sudoku.ui.theme.SudokuTheme
+import com.example.sudoku.viewmodel.InputPreferenceViewModel
 import com.example.sudoku.viewmodel.ThemeViewModel
 
 class MainActivity : ComponentActivity() {
@@ -20,11 +21,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val themeViewModel: ThemeViewModel = viewModel()
+            val inputPreferenceViewModel: InputPreferenceViewModel = viewModel()
             val currentTheme by themeViewModel.currentTheme.collectAsState()
 
             SudokuTheme(appColorTheme = currentTheme) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    AppNavigation(themeViewModel = themeViewModel)
+                    AppNavigation(
+                        themeViewModel = themeViewModel,
+                        inputPreferenceViewModel = inputPreferenceViewModel,
+                    )
                 }
             }
         }

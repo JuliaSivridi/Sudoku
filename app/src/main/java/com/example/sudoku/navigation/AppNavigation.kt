@@ -18,6 +18,7 @@ import com.example.sudoku.ui.screens.SolverScreen
 import com.example.sudoku.ui.screens.StartScreen
 import com.example.sudoku.ui.screens.StatisticsScreen
 import com.example.sudoku.viewmodel.GameViewModel
+import com.example.sudoku.viewmodel.InputPreferenceViewModel
 import com.example.sudoku.viewmodel.SolverViewModel
 import com.example.sudoku.viewmodel.ThemeViewModel
 
@@ -35,10 +36,14 @@ object Routes {
 }
 
 @Composable
-fun AppNavigation(themeViewModel: ThemeViewModel) {
+fun AppNavigation(
+    themeViewModel: ThemeViewModel,
+    inputPreferenceViewModel: InputPreferenceViewModel,
+) {
     val navController = rememberNavController()
     val viewModel: GameViewModel = viewModel()
     val solverViewModel: SolverViewModel = viewModel()
+    val inputPreference by inputPreferenceViewModel.preference.collectAsState()
 
     NavHost(navController = navController, startDestination = Routes.START) {
 
@@ -83,6 +88,7 @@ fun AppNavigation(themeViewModel: ThemeViewModel) {
 
             GameScreen(
                 viewModel = viewModel,
+                inputPreference = inputPreference,
                 onGameComplete = {
                     val currentDifficulty = viewModel.state.value.difficulty
                     navController.navigate(Routes.end(currentDifficulty)) {
@@ -149,6 +155,8 @@ fun AppNavigation(themeViewModel: ThemeViewModel) {
             SettingsScreen(
                 currentTheme = currentTheme,
                 onThemeSelected = { themeViewModel.setTheme(it) },
+                currentInputPreference = inputPreference,
+                onInputPreferenceSelected = { inputPreferenceViewModel.setPreference(it) },
                 onHomeSelected = {
                     navController.navigate(Routes.START) {
                         popUpTo(Routes.START) { inclusive = true }
