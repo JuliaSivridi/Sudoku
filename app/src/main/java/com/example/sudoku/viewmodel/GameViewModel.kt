@@ -229,8 +229,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = current.copy(
             board = previousBoard,
             undoStack = current.undoStack.dropLast(1),
-            isComplete = false,
-            autoNotesActive = false
+            isComplete = false
         )
     }
 
