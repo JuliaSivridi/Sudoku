@@ -97,13 +97,14 @@ fun GameScreen(
         ControlButtons(
             inputMode = state.inputMode,
             isCellFirst = isCellFirst,
+            isAutoNotesActive = state.autoNotesActive,
             onUndo = { viewModel.undo() },
             onToggleErase = {
                 if (isCellFirst) viewModel.eraseSelected()
                 else viewModel.toggleErase()
             },
             onToggleNotes = { viewModel.toggleNotes() },
-            onAutoNotes = { viewModel.autoNotes() },
+            onToggleAutoNotes = { viewModel.toggleAutoNotes() },
             onHint = { viewModel.hint() }
         )
 

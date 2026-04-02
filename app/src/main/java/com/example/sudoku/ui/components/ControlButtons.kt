@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.outlined.AutoFixHigh
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material3.Icon
@@ -31,10 +31,11 @@ import com.example.sudoku.model.InputMode
 fun ControlButtons(
     inputMode: InputMode,
     isCellFirst: Boolean = false,
+    isAutoNotesActive: Boolean = false,
     onUndo: () -> Unit,
     onToggleErase: () -> Unit,
     onToggleNotes: () -> Unit,
-    onAutoNotes: () -> Unit,
+    onToggleAutoNotes: () -> Unit,
     onHint: () -> Unit
 ) {
     Row(
@@ -64,10 +65,10 @@ fun ControlButtons(
             modifier = Modifier.weight(1f)
         )
         ControlButton(
-            icon = Icons.Outlined.AutoFixHigh,
-            label = "Auto",
-            isActive = false,
-            onClick = onAutoNotes,
+            icon = Icons.Outlined.AutoAwesome,
+            label = "Clues",
+            isActive = isAutoNotesActive,
+            onClick = onToggleAutoNotes,
             modifier = Modifier.weight(1f)
         )
         ControlButton(

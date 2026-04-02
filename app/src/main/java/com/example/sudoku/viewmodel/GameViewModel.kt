@@ -229,25 +229,33 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _state.value = current.copy(
             board = previousBoard,
             undoStack = current.undoStack.dropLast(1),
-            isComplete = false
+            isComplete = false,
+            autoNotesActive = false
         )
     }
 
-    // Авто-заметки: для каждой пустой ячейки вычислить и заполнить все допустимые цифры
-    fun autoNotes() {
+    // Clues: тоггл — включить (заполнить все возможные заметки) / выключить (очистить все заметки)
+    fun toggleAutoNotes() {
         val current = _state.value
         val undoStack = buildUndoStack(current)
-        val newBoard = current.board.mapIndexed { r, row ->
-            row.mapIndexed { c, cell ->
-                if (cell.value == 0) {
-                    val possible = (1..9).filter { digit ->
-                        canPlace(current.board, r, c, digit)
-                    }.toSet()
-                    cell.copy(notes = possible)
-                } else cell
+        if (!current.autoNotesActive) {
+            val newBoard = current.board.mapIndexed { r, row ->
+                row.mapIndexed { c, cell ->
+                    if (cell.value == 0) {
+                        val possible = (1..9).filter { digit ->
+                            canPlace(current.board, r, c, digit)
+                        }.toSet()
+                        cell.copy(notes = possible)
+                    } else cell
+                }
             }
+            _state.value = current.copy(board = newBoard, autoNotesActive = true, undoStack = undoStack)
+        } else {
+            val newBoard = current.board.map { row ->
+                row.map { cell -> if (cell.notes.isNotEmpty()) cell.copy(notes = emptySet()) else cell }
+            }
+            _state.value = current.copy(board = newBoard, autoNotesActive = false, undoStack = undoStack)
         }
-        _state.value = current.copy(board = newBoard, undoStack = undoStack)
     }
 
     // Подсказка: заполнить одну пустую ячейку
