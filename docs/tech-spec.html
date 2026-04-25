@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stler Sudoku — Technical Specification</title>
+  <style>
+  @page { margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 1.65;
+    color: #1a1a1a;
+    background: #fff;
+    padding: 0;
+  }
+
+  /* Cover page */
+  .cover {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 80px 72px;
+    background: #1c1c1c;
+    color: #fff;
+    page-break-after: always;
+  }
+  .cover .logo {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+  .cover .logo span { color: #e07e38; }
+  .cover .subtitle {
+    font-size: 18px;
+    color: #a1a1aa;
+    margin-bottom: 40px;
+  }
+  .cover .meta { font-size: 13px; color: #71717a; line-height: 2; }
+  .cover .meta strong { color: #d4d4d8; }
+  .cover .accent-line {
+    width: 60px;
+    height: 4px;
+    background: #e07e38;
+    border-radius: 2px;
+    margin-bottom: 32px;
+  }
+  .cover .inspiration {
+    margin-top: 48px;
+    padding: 16px 20px;
+    border: 1px solid #2a2a2a;
+    border-left: 3px solid #e07e38;
+    border-radius: 6px;
+    background: #222;
+    font-size: 12px;
+    color: #a1a1aa;
+    max-width: 480px;
+  }
+  .cover .inspiration strong { color: #e4e4e7; }
+
+  /* Content pages */
+  .content {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 56px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1c1c1c;
+    margin-top: 48px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e07e38;
+    page-break-before: always;
+  }
+  h1:first-child { page-break-before: avoid; margin-top: 0; }
+
+  h2 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1c1c1c;
+    margin-top: 32px;
+    margin-bottom: 10px;
+  }
+
+  h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-top: 20px;
+    margin-bottom: 6px;
+  }
+
+  p { margin-bottom: 12px; }
+
+  a { color: #e07e38; text-decoration: none; }
+
+  ul, ol {
+    margin: 8px 0 12px 22px;
+  }
+  li { margin-bottom: 4px; }
+
+  code {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    background: #f4f4f5;
+    border: 1px solid #e4e4e7;
+    border-radius: 3px;
+    padding: 1px 5px;
+    color: #d97706;
+  }
+
+  pre {
+    background: #1c1c1c;
+    color: #e4e4e7;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 12px 0 16px;
+    overflow-x: auto;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 11.5px;
+    line-height: 1.6;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 16px;
+    font-size: 12.5px;
+  }
+  th {
+    background: #f4f4f5;
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 12px;
+    border: 1px solid #e4e4e7;
+    color: #374151;
+  }
+  td {
+    padding: 7px 12px;
+    border: 1px solid #e4e4e7;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #fafafa; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #fed7aa;
+    margin-right: 4px;
+  }
+
+  .callout {
+    background: #fff7ed;
+    border-left: 3px solid #e07e38;
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 12.5px;
+  }
+
+  .note {
+    background: #f0f9ff;
+    border-left: 3px solid #0ea5e9;
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 12.5px;
+  }
+
+  .dir-tree {
+    background: #1c1c1c;
+    color: #e4e4e7;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 12px 0 16px;
+    font-family: 'Consolas', monospace;
+    font-size: 11.5px;
+    line-height: 1.8;
+  }
+  .dir-tree .dim { color: #71717a; }
+  .dir-tree .orange { color: #fb923c; }
+  .dir-tree .green { color: #86efac; }
+  .dir-tree .blue { color: #93c5fd; }
+
+  .toc {
+    background: #fafafa;
+    border: 1px solid #e4e4e7;
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin: 24px 0 32px;
+  }
+  .toc h2 { margin-top: 0; margin-bottom: 12px; font-size: 15px; }
+  .toc ol { margin: 0; }
+  .toc li { margin-bottom: 6px; font-size: 13px; }
+  .toc li a { color: #374151; }
+  .toc li a:hover { color: #e07e38; }
+
+  @media print {
+    body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ COVER ═══════════════════════════ -->
+<div class="cover">
+  <div class="logo">Stler <span>Sudoku</span></div>
+  <div class="subtitle">Technical Specification</div>
+  <div class="accent-line"></div>
+  <div class="meta">
+    <strong>Version</strong> 1.3 &nbsp;(versionCode 5)<br>
+    <strong>Platform</strong> Android 8.0+ &nbsp;(API 26 – 36)<br>
+    <strong>App ID</strong> io.github.juliasivridi.sudoku<br>
+    <strong>Repository</strong> github.com/JuliaSivridi/Sudoku<br>
+    <strong>Stack</strong> Kotlin · Jetpack Compose · Material 3 · MVVM · SharedPreferences
+  </div>
+  <div class="inspiration">
+    <strong>Architecture note</strong><br>
+    Fully offline, local-only app. No network requests, no accounts, no backend.
+    All state lives in ViewModel StateFlow; all persistence is SharedPreferences JSON.
+    A single puzzle is always uniquely solvable — guaranteed by a
+    <code style="background:none;border:none;color:#fb923c;padding:0">countSolutions(limit=2)</code>
+    check during generation.
+  </div>
+</div>
+
+<!-- ══════════════════════════ CONTENT ══════════════════════════ -->
+<div class="content">
+
+  <!-- TABLE OF CONTENTS -->
+  <div class="toc">
+    <h2>Table of Contents</h2>
+    <ol>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#tech-stack">Tech Stack</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#folder-structure">Package / Folder Structure</a></li>
+      <li><a href="#data-model">Data Model</a></li>
+      <li><a href="#storage">Database / Storage Schema</a></li>
+      <li><a href="#first-launch">First-Launch Setup</a></li>
+      <li><a href="#screens">Screens / Pages</a></li>
+      <li><a href="#components">Key Components</a></li>
+      <li><a href="#theme">Theme &amp; Colors</a></li>
+      <li><a href="#navigation">Navigation</a></li>
+      <li><a href="#cicd">CI/CD &amp; Build</a></li>
+      <li><a href="#dev-setup">First-Time Developer Setup</a></li>
+      <li><a href="#algorithms">Key Algorithms</a></li>
+    </ol>
+  </div>
+
+  <!-- ─────────────────────── 1. OVERVIEW ─────────────────────── -->
+  <h1 id="overview">1. Overview</h1>
+
+  <p>Stler Sudoku is a local-only Android puzzle game. The player solves 9×9 Sudoku grids at
+  three difficulty levels, aided by optional pencil marks (Notes), an auto-fill candidates
+  toggle (Clues), and a hint system. There is no network layer, no accounts, and no backend.</p>
+
+  <table>
+    <thead><tr><th>Decision</th><th>Choice</th><th>Rationale</th></tr></thead>
+    <tbody>
+      <tr><td>UI toolkit</td><td>Jetpack Compose (Material 3)</td><td>Modern declarative UI; eliminates XML layouts</td></tr>
+      <tr><td>State management</td><td>ViewModel + StateFlow</td><td>Lifecycle-aware, unidirectional data flow, testable</td></tr>
+      <tr><td>Theme propagation</td><td><code>CompositionLocal</code> (<code>LocalAppThemeColors</code>)</td><td>Per-theme color access without threading colors through every composable</td></tr>
+      <tr><td>Persistence</td><td>SharedPreferences + <code>org.json</code></td><td>No relational data; simple key-value and one serialised object suffice</td></tr>
+      <tr><td>Input mode</td><td>Two modes switchable in Settings</td><td>Supports digit-first and cell-first play styles without cluttering the game UI</td></tr>
+      <tr><td>Puzzle uniqueness</td><td>Backtracking solver with <code>countSolutions(limit=2)</code></td><td>Guarantees exactly one solution per generated puzzle</td></tr>
+      <tr><td>No timer / errors</td><td>Intentionally omitted</td><td>Design choice: relaxed, pressure-free gameplay</td></tr>
+      <tr><td>No network</td><td>Fully offline</td><td>No server cost, no auth complexity, works without connectivity</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ─────────────────────── 2. TECH STACK ─────────────────────── -->
+  <h1 id="tech-stack">2. Tech Stack</h1>
+
+  <table>
+    <thead><tr><th>Layer</th><th>Library / Tool</th><th>Version</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Language</td><td>Kotlin</td><td>2.2.10 (plugin)</td><td>JVM target 11</td></tr>
+      <tr><td>UI</td><td>Jetpack Compose BOM</td><td>2024.09.00</td><td>Pins all Compose library versions</td></tr>
+      <tr><td>UI</td><td>Compose Material 3</td><td>(from BOM)</td><td>Components, color scheme, typography</td></tr>
+      <tr><td>UI</td><td>Material Icons Extended</td><td>(from BOM)</td><td>AutoAwesome, Lightbulb, EditNote, Undo, etc.</td></tr>
+      <tr><td>Navigation</td><td>Navigation Compose</td><td>2.7.7</td><td>Typed routes via <code>Routes</code> object</td></tr>
+      <tr><td>Lifecycle</td><td>Lifecycle Runtime KTX</td><td>2.6.1</td><td><code>viewModelScope</code>, <code>collectAsState</code></td></tr>
+      <tr><td>Lifecycle</td><td>Lifecycle ViewModel Compose</td><td>2.7.0</td><td><code>viewModel()</code> factory in composables</td></tr>
+      <tr><td>Activity</td><td>Activity Compose</td><td>1.8.0</td><td><code>setContent {}</code> entry point</td></tr>
+      <tr><td>Core</td><td>Core KTX</td><td>1.10.1</td><td>Extensions for <code>Context</code>, <code>SharedPreferences</code></td></tr>
+      <tr><td>Build</td><td>Android Gradle Plugin</td><td>9.1.0</td><td><code>com.android.application</code></td></tr>
+      <tr><td>Build</td><td>Kotlin Compose Plugin</td><td>2.2.10</td><td>Enables Compose compiler</td></tr>
+      <tr><td>Persistence</td><td>SharedPreferences + <code>org.json</code></td><td>Platform</td><td>No third-party database</td></tr>
+      <tr><td>Min SDK</td><td>Android 8.0 (API 26)</td><td>—</td><td>Adaptive icons support</td></tr>
+      <tr><td>Target SDK</td><td>API 36</td><td>—</td><td></td></tr>
+      <tr><td>Test</td><td>JUnit 4</td><td>4.13.2</td><td>Unit tests (boilerplate only)</td></tr>
+      <tr><td>Test</td><td>Espresso Core</td><td>3.5.1</td><td>Instrumented tests (boilerplate only)</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ─────────────────────── 3. ARCHITECTURE ─────────────────────── -->
+  <h1 id="architecture">3. Architecture</h1>
+
+  <p><strong>Pattern: MVVM with unidirectional data flow.</strong></p>
+
+  <pre><code>User gesture
+     │
+     ▼
+Composable (UI layer)
+     │  calls method on
+     ▼
+ViewModel  ──reads/writes──►  Data Manager (SharedPreferences)
+     │
+     │  emits new state via StateFlow
+     ▼
+collectAsState()
+     │
+     ▼
+Composable re-renders</code></pre>
+
+  <h2>Write path — example: user places a digit</h2>
+  <ol>
+    <li>User taps a cell → <code>GameScreen</code> receives via <code>onCellTap</code> or <code>NumberRow.onDigitSelected</code></li>
+    <li>Based on <code>InputPreference</code>, routes to <code>viewModel.onCellTap()</code> or <code>viewModel.placeDigit()</code></li>
+    <li>ViewModel mutates a copy of <code>GameState</code>, pushes to <code>_state</code> (StateFlow)</li>
+    <li>The <code>init {}</code> collector fires auto-save to <code>GameSaveManager</code></li>
+    <li><code>collectAsState()</code> in <code>GameScreen</code> delivers the new state to <code>SudokuGrid</code>, <code>ControlButtons</code>, <code>NumberRow</code></li>
+  </ol>
+
+  <h2>Read path — example: Continue button on Start screen</h2>
+  <ol>
+    <li><code>StartScreen</code> calls <code>GameSaveManager.hasSavedGame()</code> on composition</li>
+    <li>If <code>true</code>, the Continue button is rendered</li>
+    <li>On tap, navigates to the <code>GAME</code> route with <code>loadSaved=true</code></li>
+    <li><code>GameViewModel.loadSavedGame()</code> reads JSON and restores <code>GameState</code></li>
+  </ol>
+
+  <h2>Error handling</h2>
+  <ul>
+    <li><code>GameSaveManager</code>: serialisation errors are silently swallowed; <code>loadGame()</code> returns <code>null</code> → fresh game starts</li>
+    <li><code>SudokuGenerator</code>: <code>removeCells</code> only removes a cell after uniqueness is confirmed; every puzzle is always valid</li>
+    <li>No network layer → no retry logic needed</li>
+  </ul>
+
+  <h2>ViewModels and their consumers</h2>
+  <table>
+    <thead><tr><th>ViewModel</th><th>Extends</th><th>State</th><th>Consumers</th></tr></thead>
+    <tbody>
+      <tr><td><code>GameViewModel</code></td><td><code>AndroidViewModel</code></td><td><code>StateFlow&lt;GameState&gt;</code></td><td><code>GameScreen</code>, <code>SudokuGrid</code>, <code>ControlButtons</code>, <code>NumberRow</code></td></tr>
+      <tr><td><code>SolverViewModel</code></td><td><code>ViewModel</code></td><td><code>StateFlow&lt;SolverState&gt;</code></td><td><code>SolverScreen</code></td></tr>
+      <tr><td><code>InputPreferenceViewModel</code></td><td><code>AndroidViewModel</code></td><td><code>StateFlow&lt;InputPreference&gt;</code></td><td><code>AppNavigation</code> → <code>GameScreen</code>, <code>SettingsScreen</code></td></tr>
+      <tr><td><code>ThemeViewModel</code></td><td><code>AndroidViewModel</code></td><td><code>StateFlow&lt;AppColorTheme&gt;</code></td><td><code>MainActivity</code>, <code>AppNavigation</code>, <code>SettingsScreen</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><code>GameViewModel</code> and <code>SolverViewModel</code> are scoped to the <code>NavHost</code> (created once in <code>AppNavigation</code>) and survive intra-app navigation. <code>ThemeViewModel</code> and <code>InputPreferenceViewModel</code> are created in <code>MainActivity</code> and passed down as parameters.</div>
+
+  <!-- ─────────────────────── 4. FOLDER STRUCTURE ─────────────────────── -->
+  <h1 id="folder-structure">4. Package / Folder Structure</h1>
+
+  <div class="dir-tree">
+app/src/main/<br>
+├── AndroidManifest.xml &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← single Activity, portrait-only, edge-to-edge</span><br>
+└── java/com/example/sudoku/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="orange">MainActivity.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← creates ThemeVM + InputPrefVM; hosts SudokuTheme + AppNavigation</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── model/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span class="green">Cell.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← Cell data class (value, isGiven, notes)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span class="green">Difficulty.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← enum EASY/MEDIUM/HARD with givens count</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span class="green">GameState.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← GameState + InputMode enum</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── <span class="green">InputPreference.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← enum NUMBER_FIRST / CELL_FIRST</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── game/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span class="blue">SudokuGenerator.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← random board fill + uniqueness-checked cell removal</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── <span class="blue">SudokuSolver.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← solve(), countSolutions(), isValid()</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── data/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span class="green">GameSaveManager.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← JSON serialise/deserialise GameState ↔ SharedPreferences</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span class="green">StatsManager.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← per-difficulty completed-game counters</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span class="green">InputPreferenceManager.kt</span> <span class="dim">← persists InputPreference enum name</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── <span class="green">ThemeManager.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← persists AppColorTheme enum name</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── viewmodel/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span class="orange">GameViewModel.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← all game logic (AndroidViewModel)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span class="orange">SolverViewModel.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← standalone solver screen logic</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span class="orange">InputPreferenceViewModel.kt</span> <span class="dim">← thin wrapper over InputPreferenceManager</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── <span class="orange">ThemeViewModel.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← thin wrapper over ThemeManager</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── navigation/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── <span class="orange">AppNavigation.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← NavHost; Routes object; shared VM creation</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+&nbsp;&nbsp;&nbsp;&nbsp;└── ui/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── theme/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span class="orange">Color.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← all color constants; AppThemeColors; 4 palettes</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span class="orange">Theme.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← SudokuTheme; LocalAppThemeColors CompositionLocal</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── <span class="orange">Type.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← Typography (bodyLarge only customised)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── components/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span class="blue">SudokuGrid.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← 9×9 grid with canvas borders, highlights, notes</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── <span class="blue">ControlButtons.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← Undo / Clear / Notes / Clues / Hint row</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── <span class="blue">NumberRow.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← 3×3 digit picker with count-based disable</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── screens/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="blue">StartScreen.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← home screen + BottomNavBar + MenuButton</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="blue">GameScreen.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← active game; routes input by InputPreference</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="blue">EndScreen.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← completion screen with motivational message</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="blue">SolverScreen.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← manual solver; reuses SudokuGrid</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="blue">StatisticsScreen.kt</span> &nbsp;&nbsp;<span class="dim">← per-difficulty completed counts</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── <span class="blue">SettingsScreen.kt</span> &nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← input mode toggle + theme selector</span>
+  </div>
+
+  <div class="dir-tree">
+/ <span class="dim">(project root)</span><br>
+├── build.gradle.kts &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← top-level; plugins apply false</span><br>
+├── settings.gradle.kts &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← module inclusion; repository declarations</span><br>
+├── gradle/libs.versions.toml &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← version catalog for all dependencies</span><br>
+├── gradle.properties &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← -Xmx2048m; kotlin.code.style=official</span><br>
+├── app/build.gradle.kts &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">← SDK config; signing config; dependencies</span><br>
+└── .github/workflows/release.yml &nbsp;<span class="dim">← CI/CD: APK + AAB release pipeline</span>
+  </div>
+
+  <!-- ─────────────────────── 5. DATA MODEL ─────────────────────── -->
+  <h1 id="data-model">5. Data Model</h1>
+
+  <h2>Cell</h2>
+  <table>
+    <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>value</code></td><td><code>Int</code></td><td><code>0</code></td><td><code>0</code> = empty; <code>1–9</code> = digit</td></tr>
+      <tr><td><code>isGiven</code></td><td><code>Boolean</code></td><td><code>false</code></td><td>Pre-filled clue; user cannot modify</td></tr>
+      <tr><td><code>notes</code></td><td><code>Set&lt;Int&gt;</code></td><td><code>emptySet()</code></td><td>Pencil-mark candidates <code>1–9</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Difficulty</h2>
+  <table>
+    <thead><tr><th>Name</th><th>label</th><th>givens</th><th>Cells removed</th></tr></thead>
+    <tbody>
+      <tr><td><code>EASY</code></td><td>"Easy"</td><td>46</td><td>35</td></tr>
+      <tr><td><code>MEDIUM</code></td><td>"Medium"</td><td>36</td><td>45</td></tr>
+      <tr><td><code>HARD</code></td><td>"Hard"</td><td>29</td><td>52</td></tr>
+    </tbody>
+  </table>
+
+  <h2>InputMode <span style="font-weight:400;font-size:13px;">(enum inside GameState.kt)</span></h2>
+  <table>
+    <thead><tr><th>Value</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>NORMAL</code></td><td>Tapping a cell places the selected digit</td></tr>
+      <tr><td><code>ERASE</code></td><td>Tapping a cell clears it (Number-First mode only)</td></tr>
+      <tr><td><code>NOTES</code></td><td>Tapping a cell toggles the selected digit as a pencil mark</td></tr>
+    </tbody>
+  </table>
+
+  <h2>GameState</h2>
+  <table>
+    <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>board</code></td><td><code>List&lt;List&lt;Cell&gt;&gt;</code></td><td>9×9 of Cell()</td><td>Live board</td></tr>
+      <tr><td><code>solution</code></td><td><code>List&lt;List&lt;Int&gt;&gt;</code></td><td>9×9 of 0</td><td>Correct answer; used for hints and completion check</td></tr>
+      <tr><td><code>difficulty</code></td><td><code>Difficulty</code></td><td>EASY</td><td>Active difficulty level</td></tr>
+      <tr><td><code>selectedCell</code></td><td><code>Pair&lt;Int,Int&gt;?</code></td><td>null</td><td>(row, col) of highlighted cell</td></tr>
+      <tr><td><code>selectedDigit</code></td><td><code>Int?</code></td><td>null</td><td>Active digit 1–9</td></tr>
+      <tr><td><code>inputMode</code></td><td><code>InputMode</code></td><td>NORMAL</td><td>Active input mode</td></tr>
+      <tr><td><code>isComplete</code></td><td><code>Boolean</code></td><td>false</td><td>true when all 81 cells match solution</td></tr>
+      <tr><td><code>autoNotesActive</code></td><td><code>Boolean</code></td><td>false</td><td>true while Clues mode is on</td></tr>
+      <tr><td><code>undoStack</code></td><td><code>List&lt;List&lt;List&lt;Cell&gt;&gt;&gt;</code></td><td>emptyList()</td><td>Board snapshots; max 50 entries</td></tr>
+    </tbody>
+  </table>
+  <div class="callout"><strong>Note:</strong> <code>undoStack</code> stores board layouts only — not <code>inputMode</code>, <code>selectedCell</code>, or <code>autoNotesActive</code>. Undoing restores the board but leaves the Clues toggle state unchanged (intentional decoupling).</div>
+
+  <h2>InputPreference</h2>
+  <table>
+    <thead><tr><th>Value</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>NUMBER_FIRST</code></td><td>Select digit in NumberRow → tap cell to place</td></tr>
+      <tr><td><code>CELL_FIRST</code></td><td>Tap cell to select → tap digit in NumberRow to place</td></tr>
+    </tbody>
+  </table>
+
+  <h2>SolverState</h2>
+  <table>
+    <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>board</code></td><td><code>List&lt;List&lt;Cell&gt;&gt;</code></td><td>9×9 of Cell()</td><td>Manually entered puzzle</td></tr>
+      <tr><td><code>selectedDigit</code></td><td><code>Int?</code></td><td>null</td><td>Active digit in digit picker</td></tr>
+      <tr><td><code>isClearMode</code></td><td><code>Boolean</code></td><td>false</td><td>When true, tapping a cell clears it</td></tr>
+      <tr><td><code>isSolved</code></td><td><code>Boolean</code></td><td>false</td><td>true after successful solve</td></tr>
+      <tr><td><code>noSolution</code></td><td><code>Boolean</code></td><td>false</td><td>true when solver finds no solution</td></tr>
+      <tr><td><code>undoStack</code></td><td><code>List&lt;List&lt;List&lt;Cell&gt;&gt;&gt;</code></td><td>emptyList()</td><td>Board snapshots</td></tr>
+    </tbody>
+  </table>
+
+  <h2>AppColorTheme &amp; AppThemeColors</h2>
+  <table>
+    <thead><tr><th>AppColorTheme value</th><th>displayName</th></tr></thead>
+    <tbody>
+      <tr><td><code>ORANGE</code></td><td>"Orange"</td></tr>
+      <tr><td><code>GREEN</code></td><td>"Green"</td></tr>
+      <tr><td><code>BLUE</code></td><td>"Blue"</td></tr>
+      <tr><td><code>PURPLE</code></td><td>"Purple"</td></tr>
+    </tbody>
+  </table>
+  <table>
+    <thead><tr><th>AppThemeColors field</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>accent</code></td><td><code>Color</code></td><td>Primary accent — buttons, selected digit text, titles</td></tr>
+      <tr><td><code>accentVariant</code></td><td><code>Color</code></td><td>Lighter accent — user digit color in dark theme</td></tr>
+      <tr><td><code>cellDigitHighlightLight</code></td><td><code>Color</code></td><td>Same-digit cell tint, light theme</td></tr>
+      <tr><td><code>cellDigitHighlightDark</code></td><td><code>Color</code></td><td>Same-digit cell tint, dark theme</td></tr>
+      <tr><td><code>userNumberLight</code></td><td><code>Color</code></td><td>User-placed digit text color, light theme</td></tr>
+      <tr><td><code>userNumberDark</code></td><td><code>Color</code></td><td>User-placed digit text color, dark theme</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ─────────────────────── 6. STORAGE ─────────────────────── -->
+  <h1 id="storage">6. Database / Storage Schema</h1>
+
+  <p>All persistence uses Android <code>SharedPreferences</code>. There is no SQLite database, no files, and no network storage.</p>
+
+  <h2>File: <code>"sudoku_prefs"</code></h2>
+  <table>
+    <thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Written by</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>"saved_game"</code></td><td>String (JSON)</td><td>absent</td><td><code>GameSaveManager</code></td><td>Serialised in-progress <code>GameState</code>; removed on completion</td></tr>
+      <tr><td><code>"input_preference"</code></td><td>String</td><td><code>"NUMBER_FIRST"</code></td><td><code>InputPreferenceManager</code></td><td>Persisted <code>InputPreference.name</code></td></tr>
+      <tr><td><code>"color_theme"</code></td><td>String</td><td><code>"ORANGE"</code></td><td><code>ThemeManager</code></td><td>Persisted <code>AppColorTheme.name</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>File: <code>"sudoku_stats"</code></h2>
+  <table>
+    <thead><tr><th>Key</th><th>Type</th><th>Default</th><th>Written by</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>"EASY"</code></td><td>Int</td><td>0</td><td><code>StatsManager</code></td><td>Completed Easy game count</td></tr>
+      <tr><td><code>"MEDIUM"</code></td><td>Int</td><td>0</td><td><code>StatsManager</code></td><td>Completed Medium game count</td></tr>
+      <tr><td><code>"HARD"</code></td><td>Int</td><td>0</td><td><code>StatsManager</code></td><td>Completed Hard game count</td></tr>
+    </tbody>
+  </table>
+
+  <h2>JSON schema — <code>"saved_game"</code> value</h2>
+  <pre><code>{
+  "difficulty": "EASY",          // "EASY" | "MEDIUM" | "HARD"
+  "board": [                     // 9 rows
+    [                            // 9 columns
+      { "v": 5, "g": true,  "n": [] },          // given clue
+      { "v": 0, "g": false, "n": [1, 3, 7] },   // empty cell with notes
+      ...
+    ],
+    ...
+  ],
+  "solution": [                  // 9×9 array of plain Int
+    [5, 3, 4, 6, 7, 8, 9, 1, 2],
+    ...
+  ]
+}</code></pre>
+
+  <table>
+    <thead><tr><th>JSON key</th><th>Source field</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td><code>"v"</code></td><td><code>Cell.value</code></td><td>Int 0–9</td></tr>
+      <tr><td><code>"g"</code></td><td><code>Cell.isGiven</code></td><td>Boolean</td></tr>
+      <tr><td><code>"n"</code></td><td><code>Cell.notes</code></td><td>JSON array of Int</td></tr>
+      <tr><td><code>"difficulty"</code></td><td><code>Difficulty.name</code></td><td>"EASY" / "MEDIUM" / "HARD"</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><strong>Not serialised:</strong> <code>selectedCell</code>, <code>selectedDigit</code>, <code>inputMode</code>, <code>isComplete</code>, <code>undoStack</code>, <code>autoNotesActive</code>. All reset to defaults on load.<br><br>
+  <strong>Auto-save trigger</strong> (in <code>GameViewModel.init {}</code>): save fires whenever any non-given cell has <code>value != 0</code>; save is <em>removed</em> when <code>isComplete == true</code>.</div>
+
+  <!-- ─────────────────────── 7. FIRST LAUNCH ─────────────────────── -->
+  <h1 id="first-launch">7. First-Launch Setup</h1>
+
+  <p>There is no user authentication, no onboarding wizard, and no remote configuration. The app is fully functional immediately on first launch.</p>
+
+  <table>
+    <thead><tr><th>Condition</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td><code>ThemeManager</code> finds no <code>"color_theme"</code></td><td>Defaults to <code>ORANGE</code></td></tr>
+      <tr><td><code>InputPreferenceManager</code> finds no key</td><td>Defaults to <code>NUMBER_FIRST</code></td></tr>
+      <tr><td><code>GameSaveManager.hasSavedGame()</code> returns false</td><td>Continue button not shown on Start screen</td></tr>
+      <tr><td><code>StatsManager</code> finds no keys</td><td>Returns 0 for all difficulties</td></tr>
+      <tr><td>User selects a difficulty</td><td>Game starts immediately</td></tr>
+    </tbody>
+  </table>
+
+  <p>No permissions are requested. No Google Play Services or Firebase dependencies. No network requests ever made.</p>
+
+  <!-- ─────────────────────── 8. SCREENS ─────────────────────── -->
+  <h1 id="screens">8. Screens / Pages</h1>
+
+  <h2>StartScreen</h2>
+  <p><strong>File:</strong> <code>ui/screens/StartScreen.kt</code> &nbsp;·&nbsp; <strong>Route:</strong> <code>"start"</code> (start destination)<br>
+  <strong>ViewModels:</strong> none — reads <code>GameSaveManager</code> directly via <code>LocalContext</code></p>
+  <table>
+    <thead><tr><th>Element</th><th>Details</th></tr></thead>
+    <tbody>
+      <tr><td>Title</td><td>"SUDOKU" · 28sp · accent color</td></tr>
+      <tr><td>Continue button</td><td>Shown only if <code>hasSavedGame() == true</code>; placed above difficulty group; 56dp height</td></tr>
+      <tr><td>Difficulty buttons</td><td>Easy / Medium / Hard — <code>MenuButton</code> composable; 56dp height; <code>RoundedCornerShape(12dp)</code></td></tr>
+      <tr><td>Solver button</td><td>Outlined <code>Button</code>; navigates to <code>SOLVER</code> route</td></tr>
+      <tr><td>Spacers</td><td>~56dp between Continue and difficulty group; ~56dp between difficulty group and Solver</td></tr>
+      <tr><td>Bottom bar</td><td><code>BottomNavBar</code> with home tab selected</td></tr>
+    </tbody>
+  </table>
+
+  <h2>GameScreen</h2>
+  <p><strong>File:</strong> <code>ui/screens/GameScreen.kt</code> &nbsp;·&nbsp; <strong>Route:</strong> <code>"game/{difficulty}?loadSaved={loadSaved}"</code><br>
+  <strong>ViewModels:</strong> <code>GameViewModel</code> &nbsp;·&nbsp; <strong>Nav args:</strong> <code>difficulty: String</code>, <code>loadSaved: Boolean</code> (default false)</p>
+  <p>On <code>LaunchedEffect(unit)</code>: if <code>loadSaved == true</code> → <code>viewModel.loadSavedGame()</code>; else → <code>viewModel.startGame(difficulty)</code>.<br>
+  On <code>LaunchedEffect(state.isComplete)</code>: if <code>isComplete == true</code> → calls <code>onGameComplete()</code>.</p>
+
+  <table>
+    <thead><tr><th>Event</th><th>NUMBER_FIRST</th><th>CELL_FIRST</th></tr></thead>
+    <tbody>
+      <tr><td>Cell tapped</td><td><code>viewModel.onCellTap(row, col)</code></td><td><code>viewModel.selectCell(row, col)</code></td></tr>
+      <tr><td>Digit tapped</td><td><code>viewModel.selectDigit(digit)</code></td><td><code>viewModel.placeDigit(digit)</code></td></tr>
+      <tr><td>Clear button</td><td><code>viewModel.toggleErase()</code></td><td><code>viewModel.eraseSelected()</code></td></tr>
+      <tr><td><code>NumberRow.showSelection</code></td><td><code>true</code></td><td><code>false</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>EndScreen</h2>
+  <p><strong>File:</strong> <code>ui/screens/EndScreen.kt</code> &nbsp;·&nbsp; <strong>Route:</strong> <code>"end/{difficulty}"</code> &nbsp;·&nbsp; <strong>ViewModels:</strong> none</p>
+  <p>Displays a 🎉 emoji (72sp), "Puzzle Complete!" (28sp bold), one of 6 random motivational messages, "Play Again" and "Menu" buttons.</p>
+
+  <h2>SolverScreen</h2>
+  <p><strong>File:</strong> <code>ui/screens/SolverScreen.kt</code> &nbsp;·&nbsp; <strong>Route:</strong> <code>"solver"</code> &nbsp;·&nbsp; <strong>ViewModels:</strong> <code>SolverViewModel</code></p>
+  <p>User manually enters digits of an unknown puzzle. <code>SudokuGrid</code> renders with <code>isSolverMode=true</code> — conflict highlighting suppressed; all digits shown in accent color. Tapping "Solve" runs the backtracking solver. "No solution found." is shown in red when <code>state.noSolution == true</code>.</p>
+
+  <h2>StatisticsScreen</h2>
+  <p><strong>File:</strong> <code>ui/screens/StatisticsScreen.kt</code> &nbsp;·&nbsp; <strong>Route:</strong> <code>"statistics"</code> &nbsp;·&nbsp; <strong>ViewModels:</strong> none</p>
+  <p>Shows completed-game counts in a bordered table (Mode | Completed). Counts are read once at composition — NOT reactive. <code>BottomNavBar</code> with stats tab selected.</p>
+
+  <h2>SettingsScreen</h2>
+  <p><strong>File:</strong> <code>ui/screens/SettingsScreen.kt</code> &nbsp;·&nbsp; <strong>Route:</strong> <code>"settings"</code><br>
+  <strong>State sources:</strong> <code>InputPreferenceViewModel</code>, <code>ThemeViewModel</code> (passed as params from <code>AppNavigation</code>)</p>
+  <table>
+    <thead><tr><th>Section</th><th>Component</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td>Input mode</td><td><code>SingleChoiceSegmentedButtonRow</code></td><td>"Number first" / "Cell first"; persisted immediately via <code>InputPreferenceViewModel</code></td></tr>
+      <tr><td>Theme</td><td>One full-width button per <code>AppColorTheme</code></td><td>Button background = palette's <code>accent</code>; checkmark icon on active theme; persisted via <code>ThemeViewModel</code></td></tr>
+      <tr><td>Bottom bar</td><td><code>BottomNavBar</code></td><td>Settings tab selected</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ─────────────────────── 9. COMPONENTS ─────────────────────── -->
+  <h1 id="components">9. Key Components</h1>
+
+  <h2>SudokuGrid &nbsp;<span style="font-weight:400;font-size:12px;color:#71717a;">ui/components/SudokuGrid.kt</span></h2>
+  <table>
+    <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>state</code></td><td><code>GameState</code></td><td>—</td><td>Full game state</td></tr>
+      <tr><td><code>onCellTap</code></td><td><code>(Int,Int)->Unit</code></td><td>—</td><td>Callback (row, col) on cell tap</td></tr>
+      <tr><td><code>isSolverMode</code></td><td><code>Boolean</code></td><td>false</td><td>Suppresses conflict highlighting; all cells treated as user-placed</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Cell background priority (highest wins)</h3>
+  <table>
+    <thead><tr><th>Priority</th><th>Condition</th><th>Background</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Cell is selected</td><td><code>CellSelected*</code></td></tr>
+      <tr><td>2</td><td>Cell's value matches <code>selectedDigit</code></td><td><code>appColors.cellDigitHighlight*</code></td></tr>
+      <tr><td>3</td><td>Same row or column as selected cell</td><td><code>CellHighlight*</code></td></tr>
+      <tr><td>4</td><td>Default</td><td>Transparent</td></tr>
+    </tbody>
+  </table>
+
+  <p>Conflict overlay (separate pass): <code>ConflictBg*</code> background + <code>ConflictColor*</code> text, applied for cells where <code>hasConflict == true</code>.</p>
+  <p><strong>Border rendering</strong> via <code>Modifier.drawWithContent</code>: inner cell lines 1dp; block boundary lines 2dp; outer frame 2dp on all 4 sides.</p>
+  <p><strong>Notes sub-grid:</strong> private <code>NotesGrid</code> composable; 3×3 layout; 8sp font; <code>#909090</code> light / <code>#9E9E9E</code> dark. Rendered only when <code>cell.value == 0 &amp;&amp; cell.notes.isNotEmpty()</code>.</p>
+  <p><strong>Text sizes:</strong> 24sp for digits; 8sp for note marks.</p>
+
+  <h2>ControlButtons &nbsp;<span style="font-weight:400;font-size:12px;color:#71717a;">ui/components/ControlButtons.kt</span></h2>
+  <table>
+    <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>inputMode</code></td><td><code>InputMode</code></td><td>—</td><td>Current input mode</td></tr>
+      <tr><td><code>isCellFirst</code></td><td><code>Boolean</code></td><td>false</td><td>Changes Clear button active-state logic</td></tr>
+      <tr><td><code>isAutoNotesActive</code></td><td><code>Boolean</code></td><td>false</td><td>Drives Clues button highlight</td></tr>
+      <tr><td><code>onUndo</code></td><td><code>()->Unit</code></td><td>—</td><td></td></tr>
+      <tr><td><code>onToggleErase</code></td><td><code>()->Unit</code></td><td>—</td><td></td></tr>
+      <tr><td><code>onToggleNotes</code></td><td><code>()->Unit</code></td><td>—</td><td></td></tr>
+      <tr><td><code>onToggleAutoNotes</code></td><td><code>()->Unit</code></td><td>—</td><td></td></tr>
+      <tr><td><code>onHint</code></td><td><code>()->Unit</code></td><td>—</td><td></td></tr>
+    </tbody>
+  </table>
+  <table>
+    <thead><tr><th>#</th><th>Label</th><th>Icon</th><th>isActive condition</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Undo</td><td><code>AutoMirrored.Filled.Undo</code></td><td>always false</td></tr>
+      <tr><td>2</td><td>Clear</td><td><code>Filled.Close</code></td><td><code>!isCellFirst &amp;&amp; inputMode == ERASE</code></td></tr>
+      <tr><td>3</td><td>Notes</td><td><code>Filled.EditNote</code></td><td><code>inputMode == NOTES</code></td></tr>
+      <tr><td>4</td><td>Clues</td><td><code>Outlined.AutoAwesome</code></td><td><code>isAutoNotesActive</code></td></tr>
+      <tr><td>5</td><td>Hint</td><td><code>Outlined.Lightbulb</code></td><td>always false</td></tr>
+    </tbody>
+  </table>
+  <p>Active: <code>primary</code> (accent) tint · <code>FontWeight.SemiBold</code> · 12sp label. Inactive: <code>onBackground</code> · <code>FontWeight.Normal</code>. Icon size: 28dp. Vertical padding: 10dp. Layout: <code>SpaceEvenly</code> Row, each button <code>weight(1f)</code>.</p>
+
+  <h2>NumberRow &nbsp;<span style="font-weight:400;font-size:12px;color:#71717a;">ui/components/NumberRow.kt</span></h2>
+  <table>
+    <thead><tr><th>Parameter</th><th>Type</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>board</code></td><td><code>List&lt;List&lt;Cell&gt;&gt;</code></td><td>Used to compute per-digit occurrence counts</td></tr>
+      <tr><td><code>selectedDigit</code></td><td><code>Int?</code></td><td>Currently highlighted digit</td></tr>
+      <tr><td><code>showSelection</code></td><td><code>Boolean</code></td><td><code>false</code> in CELL_FIRST — digits tappable but never visually highlighted</td></tr>
+      <tr><td><code>onDigitSelected</code></td><td><code>(Int)->Unit</code></td><td>Fires when user taps a non-full digit</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Layout:</strong> 3-column × 3-row grid; outer <code>border(1dp, GridInnerBorder*)</code>. Each digit cell: <code>weight(1f)</code> + <code>aspectRatio(2f)</code> (width = 2× height). Font: 32sp.<br>
+  <strong>Disable:</strong> digit is "full" when count on board ≥ 9 — text hidden, cell not clickable.<br>
+  <strong>Selection highlight</strong> (when <code>showSelection == true</code>): <code>cellDigitHighlight*</code> background · <code>accent</code> text · <code>FontWeight.Bold</code>.</p>
+
+  <h2>BottomNavBar &nbsp;<span style="font-weight:400;font-size:12px;color:#71717a;">ui/screens/StartScreen.kt</span></h2>
+  <table>
+    <thead><tr><th>Parameter</th><th>Type</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>currentTab</code></td><td><code>String</code></td><td>"home" / "stats" / "settings"</td></tr>
+      <tr><td><code>onHomeSelected</code></td><td><code>()->Unit</code></td><td></td></tr>
+      <tr><td><code>onStatisticsSelected</code></td><td><code>()->Unit</code></td><td></td></tr>
+      <tr><td><code>onSettingsSelected</code></td><td><code>()->Unit</code></td><td></td></tr>
+    </tbody>
+  </table>
+  <p>Three <code>NavigationBarItem</code>s: Home (<code>Outlined.Home</code>), Stats (<code>Outlined.Leaderboard</code>), Settings (<code>Outlined.Settings</code>). Icon: 28dp. Selected: <code>accent</code>; unselected: <code>onBackground @ 60% alpha</code>; indicator: <code>Transparent</code>.</p>
+
+  <!-- ─────────────────────── 10. THEME & COLORS ─────────────────────── -->
+  <h1 id="theme">10. Theme &amp; Colors</h1>
+
+  <h2>Named Color Constants <span style="font-weight:400;font-size:12px;color:#71717a;">(ui/theme/Color.kt)</span></h2>
+  <table>
+    <thead><tr><th>Constant</th><th>Hex</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><code>Orange</code></td><td>#E07E38</td><td>Default accent color</td></tr>
+      <tr><td><code>OrangeLight</code></td><td>#E8935A</td><td>Default accent variant</td></tr>
+      <tr><td><code>BackgroundLight</code></td><td>#FFFFFF</td><td>App background, light theme</td></tr>
+      <tr><td><code>SurfaceLight</code></td><td>#FFFFFF</td><td>Surface, light theme</td></tr>
+      <tr><td><code>OnBackgroundLight</code></td><td>#1C1C1C</td><td>Text / icons on light background</td></tr>
+      <tr><td><code>BackgroundDark</code></td><td>#1C1C1C</td><td>App background, dark theme</td></tr>
+      <tr><td><code>SurfaceDark</code></td><td>#363636</td><td>Surface, dark theme</td></tr>
+      <tr><td><code>OnBackgroundDark</code></td><td>#EEEEEE</td><td>Text / icons on dark background</td></tr>
+      <tr><td><code>GridOuterBorderLight</code></td><td>#4D5666</td><td>3×3 block boundaries + outer grid frame, light</td></tr>
+      <tr><td><code>GridInnerBorderLight</code></td><td>#BEC5D1</td><td>Inner cell dividers, light</td></tr>
+      <tr><td><code>GridOuterBorderDark</code></td><td>#656D7A</td><td>3×3 block boundaries + outer grid frame, dark</td></tr>
+      <tr><td><code>GridInnerBorderDark</code></td><td>#363C47</td><td>Inner cell dividers, dark</td></tr>
+      <tr><td><code>CellHighlightLight</code></td><td>#F0F0F0</td><td>Row / column highlight background, light</td></tr>
+      <tr><td><code>CellHighlightDark</code></td><td>#363636</td><td>Row / column highlight background, dark</td></tr>
+      <tr><td><code>CellSelectedLight</code></td><td>#E4E4E4</td><td>Selected cell background, light</td></tr>
+      <tr><td><code>CellSelectedDark</code></td><td>#424242</td><td>Selected cell background, dark</td></tr>
+      <tr><td><code>CellDigitHighlightLight</code></td><td>#33CF7A30</td><td>Same-digit cell tint (~20% alpha), light</td></tr>
+      <tr><td><code>CellDigitHighlightDark</code></td><td>#80CF7A30</td><td>Same-digit cell tint (~50% alpha), dark</td></tr>
+      <tr><td><code>GivenNumberLight</code></td><td>#1C1C1C</td><td>Pre-filled clue digit text, light</td></tr>
+      <tr><td><code>GivenNumberDark</code></td><td>#EEEEEE</td><td>Pre-filled clue digit text, dark</td></tr>
+      <tr><td><code>UserNumberLight</code></td><td>#E07E38</td><td>User-placed digit text, light</td></tr>
+      <tr><td><code>UserNumberDark</code></td><td>#E8935A</td><td>User-placed digit text, dark</td></tr>
+      <tr><td><code>NoteNumberLight</code></td><td>#909090</td><td>Pencil-mark note text, light</td></tr>
+      <tr><td><code>NoteNumberDark</code></td><td>#9E9E9E</td><td>Pencil-mark note text, dark</td></tr>
+      <tr><td><code>ConflictColorLight</code></td><td>#CC1515</td><td>Conflicting digit text, light</td></tr>
+      <tr><td><code>ConflictColorDark</code></td><td>#FF5252</td><td>Conflicting digit text, dark</td></tr>
+      <tr><td><code>ConflictBgLight</code></td><td>#33CC1515</td><td>Conflict cell background (~20% alpha), light</td></tr>
+      <tr><td><code>ConflictBgDark</code></td><td>#80CC1515</td><td>Conflict cell background (~50% alpha), dark</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Four Theme Palettes</h2>
+  <table>
+    <thead><tr><th>Palette</th><th>accent</th><th>accentVariant</th><th>userNumberLight</th><th>userNumberDark</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Orange</td>
+        <td><span class="badge" style="background:#fff7ed;color:#c2410c;">#E07E38</span></td>
+        <td><span class="badge">#E8935A</span></td>
+        <td>#E07E38</td><td>#E8935A</td>
+      </tr>
+      <tr>
+        <td>Green</td>
+        <td><span class="badge" style="background:#f0fdf4;color:#15803d;border-color:#bbf7d0;">#4D8B53</span></td>
+        <td><span class="badge" style="background:#f0fdf4;color:#15803d;border-color:#bbf7d0;">#79B57F</span></td>
+        <td>#4D8B53</td><td>#79B57F</td>
+      </tr>
+      <tr>
+        <td>Blue</td>
+        <td><span class="badge" style="background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe;">#3D73B0</span></td>
+        <td><span class="badge" style="background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe;">#6B9FD4</span></td>
+        <td>#3D73B0</td><td>#6B9FD4</td>
+      </tr>
+      <tr>
+        <td>Purple</td>
+        <td><span class="badge" style="background:#faf5ff;color:#7e22ce;border-color:#e9d5ff;">#7A4FA3</span></td>
+        <td><span class="badge" style="background:#faf5ff;color:#7e22ce;border-color:#e9d5ff;">#A47BC8</span></td>
+        <td>#7A4FA3</td><td>#A47BC8</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="note"><code>cellDigitHighlightLight</code> = accent at <code>0x33</code> alpha &nbsp;·&nbsp; <code>cellDigitHighlightDark</code> = accent at <code>0x80</code> alpha</div>
+
+  <h2>Material 3 Color Scheme Mapping</h2>
+  <table>
+    <thead><tr><th>M3 token</th><th>Dark theme</th><th>Light theme</th></tr></thead>
+    <tbody>
+      <tr><td><code>primary</code></td><td><code>themeColors.accent</code></td><td><code>themeColors.accent</code></td></tr>
+      <tr><td><code>onPrimary</code></td><td>Black</td><td>White</td></tr>
+      <tr><td><code>secondary</code></td><td><code>themeColors.accentVariant</code></td><td><code>themeColors.accentVariant</code></td></tr>
+      <tr><td><code>background</code></td><td>BackgroundDark <code>#1C1C1C</code></td><td>BackgroundLight <code>#FFFFFF</code></td></tr>
+      <tr><td><code>surface</code></td><td>SurfaceDark <code>#363636</code></td><td>SurfaceLight <code>#FFFFFF</code></td></tr>
+      <tr><td><code>onBackground</code></td><td>OnBackgroundDark <code>#EEEEEE</code></td><td>OnBackgroundLight <code>#1C1C1C</code></td></tr>
+    </tbody>
+  </table>
+  <p><code>SudokuTheme</code> wraps content in <code>CompositionLocalProvider(LocalAppThemeColors provides themeColors)</code>, making the full palette available to any composable via <code>LocalAppThemeColors.current</code>.</p>
+
+  <!-- ─────────────────────── 11. NAVIGATION ─────────────────────── -->
+  <h1 id="navigation">11. Navigation</h1>
+
+  <h2>Routes</h2>
+  <table>
+    <thead><tr><th>Constant</th><th>URL pattern</th><th>Nav args</th></tr></thead>
+    <tbody>
+      <tr><td><code>START</code></td><td><code>"start"</code></td><td>—</td></tr>
+      <tr><td><code>GAME</code></td><td><code>"game/{difficulty}?loadSaved={loadSaved}"</code></td><td><code>difficulty: String</code>, <code>loadSaved: Boolean</code> (default false)</td></tr>
+      <tr><td><code>END</code></td><td><code>"end/{difficulty}"</code></td><td><code>difficulty: String</code></td></tr>
+      <tr><td><code>SOLVER</code></td><td><code>"solver"</code></td><td>—</td></tr>
+      <tr><td><code>STATISTICS</code></td><td><code>"statistics"</code></td><td>—</td></tr>
+      <tr><td><code>SETTINGS</code></td><td><code>"settings"</code></td><td>—</td></tr>
+    </tbody>
+  </table>
+
+  <p>Builder helpers in <code>Routes</code>: <code>Routes.game(difficulty)</code> → <code>"game/${difficulty.name}?loadSaved=false"</code> &nbsp;·&nbsp; <code>Routes.continueGame()</code> → <code>"game/SAVED?loadSaved=true"</code> &nbsp;·&nbsp; <code>Routes.end(difficulty)</code> → <code>"end/${difficulty.name}"</code></p>
+
+  <h2>Back-Stack Management</h2>
+  <table>
+    <thead><tr><th>Navigation event</th><th>popUpTo behaviour</th></tr></thead>
+    <tbody>
+      <tr><td>Game complete → End screen</td><td><code>popUpTo(START)</code> (exclusive)</td></tr>
+      <tr><td>End "Menu" → Start</td><td><code>popUpTo(START) { inclusive = true }</code></td></tr>
+      <tr><td>End "Play Again" → Game</td><td><code>popUpTo(START)</code>, then navigate to GAME</td></tr>
+      <tr><td>Solver / Stats / Settings → Start</td><td><code>popUpTo(START) { inclusive = true }</code></td></tr>
+    </tbody>
+  </table>
+
+  <p>There are no deeplinks. The app has no <code>intent-filter</code> for custom URI schemes.</p>
+
+  <!-- ─────────────────────── 12. CI/CD ─────────────────────── -->
+  <h1 id="cicd">12. CI/CD &amp; Build</h1>
+
+  <p><strong>Workflow file:</strong> <code>.github/workflows/release.yml</code></p>
+
+  <table>
+    <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Trigger</td><td><code>push</code> on tags matching <code>v*</code></td></tr>
+      <tr><td>Runner</td><td><code>ubuntu-latest</code></td></tr>
+      <tr><td>JDK</td><td>Temurin 17</td></tr>
+      <tr><td>Permissions</td><td><code>contents: write</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Pipeline steps</h2>
+  <table>
+    <thead><tr><th>#</th><th>Step</th><th>Details</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Checkout</td><td><code>actions/checkout@v4.2.2</code></td></tr>
+      <tr><td>2</td><td>Set up JDK 17</td><td><code>actions/setup-java@v4.7.0</code>, distribution <code>temurin</code></td></tr>
+      <tr><td>3</td><td>Make gradlew executable</td><td><code>chmod +x ./gradlew</code></td></tr>
+      <tr><td>4</td><td>Decode keystore</td><td><code>secrets.KEYSTORE_BASE64</code> → <code>keystore.jks</code> via <code>base64 --decode</code></td></tr>
+      <tr><td>5</td><td>Build release APK + AAB</td><td><code>./gradlew assembleRelease bundleRelease</code> with <code>KEYSTORE_PATH</code>, <code>KEYSTORE_PASSWORD</code>, <code>KEY_ALIAS</code>, <code>KEY_PASSWORD</code> env vars</td></tr>
+      <tr><td>6</td><td>Rename artifacts</td><td><code>app-release.apk</code> → <code>stler-sudoku.apk</code>; <code>app-release.aab</code> → <code>stler-sudoku.aab</code></td></tr>
+      <tr><td>7</td><td>Create GitHub Release</td><td><code>softprops/action-gh-release@v2</code>; attaches both artifacts</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout"><strong>Required secrets:</strong> <code>KEYSTORE_BASE64</code> &nbsp; <code>KEYSTORE_PASSWORD</code> &nbsp; <code>KEY_ALIAS</code> &nbsp; <code>KEY_PASSWORD</code></div>
+
+  <h2>App build config <span style="font-weight:400;font-size:12px;">(app/build.gradle.kts)</span></h2>
+  <table>
+    <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td><code>applicationId</code></td><td><code>io.github.juliasivridi.sudoku</code></td></tr>
+      <tr><td><code>compileSdk</code></td><td>36</td></tr>
+      <tr><td><code>minSdk</code></td><td>26</td></tr>
+      <tr><td><code>targetSdk</code></td><td>36</td></tr>
+      <tr><td><code>versionCode</code></td><td>5</td></tr>
+      <tr><td><code>versionName</code></td><td>"1.3"</td></tr>
+      <tr><td><code>isMinifyEnabled</code></td><td>false</td></tr>
+      <tr><td>Java source/target</td><td>VERSION_11</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ─────────────────────── 13. DEV SETUP ─────────────────────── -->
+  <h1 id="dev-setup">13. First-Time Developer Setup</h1>
+
+  <ol>
+    <li>Install Android Studio Hedgehog (2023.1) or later</li>
+    <li>Clone the repository:<pre><code>git clone https://github.com/JuliaSivridi/Sudoku.git</code></pre></li>
+    <li>Open the project in Android Studio; let Gradle sync finish</li>
+    <li>Connect an Android device (API 26+) or create an AVD with API 26+</li>
+    <li>Press <strong>Run ▶</strong> — a debug APK builds and deploys to the device</li>
+  </ol>
+
+  <h2>Build a release APK locally</h2>
+  <pre><code>./gradlew assembleRelease \
+  -PKEYSTORE_PATH=/path/to/keystore.jks \
+  -PKEYSTORE_PASSWORD=*** \
+  -PKEY_ALIAS=*** \
+  -PKEY_PASSWORD=***
+# Output: app/build/outputs/apk/release/app-release.apk</code></pre>
+
+  <h2>Publish a new release</h2>
+  <pre><code># 1. Bump versionCode and versionName in app/build.gradle.kts
+# 2. Commit and tag
+git tag v&lt;versionName&gt;
+git push origin v&lt;versionName&gt;
+# GitHub Actions builds APK + AAB and creates a GitHub Release automatically</code></pre>
+
+  <!-- ─────────────────────── 14. ALGORITHMS ─────────────────────── -->
+  <h1 id="algorithms">14. Key Algorithms</h1>
+
+  <h2>Puzzle Generation</h2>
+  <pre><code>generate(difficulty):
+    solution ← fillBoard(emptyBoard)     // random backtracking
+    puzzle   ← deepCopy(solution)
+    toRemove ← 81 − difficulty.givens    // 35 / 45 / 52
+    removeCells(puzzle, toRemove)
+    board ← toCellGrid(puzzle)           // non-zero cells become isGiven=true
+    return (board, solution)
+
+fillBoard(board):
+    (r, c) ← first cell where value == 0 (row-major scan)
+    if no such cell: return true         // board fully filled
+    digits ← [1..9].shuffled()          // randomise order each call
+    for d in digits:
+        if isValid(board, r, c, d):
+            board[r][c] ← d
+            if fillBoard(board): return true
+            board[r][c] ← 0             // backtrack
+    return false
+
+removeCells(board, count):
+    positions ← [0..80].shuffled()
+    removed ← 0
+    for pos in positions:
+        if removed == count: break
+        r ← pos / 9;  c ← pos % 9
+        if board[r][c] == 0: continue   // already empty
+        backup ← board[r][c]
+        board[r][c] ← 0
+        if countSolutions(deepCopy(board), limit=2) == 1:
+            removed++                   // unique solution — keep removal
+        else:
+            board[r][c] ← backup        // restore — would break uniqueness</code></pre>
+
+  <h2>Puzzle Solving (Backtracking)</h2>
+  <pre><code>solve(board):
+    (r, c) ← first cell where value == 0 (row-major)
+    if no such cell: return true         // all cells filled
+    for d in 1..9:
+        if isValid(board, r, c, d):
+            board[r][c] ← d
+            if solve(board): return true
+            board[r][c] ← 0
+    return false
+
+countSolutions(board, limit):
+    (r, c) ← first cell where value == 0
+    if no such cell: return 1            // found a complete solution
+    count ← 0
+    for d in 1..9:
+        if isValid(board, r, c, d):
+            board[r][c] ← d
+            count += countSolutions(board, limit)
+            board[r][c] ← 0
+            if count >= limit: return count  // early exit
+    return count
+
+isValid(board, r, c, d):
+    for each cell in row r    : if value == d: return false
+    for each cell in column c : if value == d: return false
+    br ← (r / 3) * 3;  bc ← (c / 3) * 3
+    for dr in 0..2, dc in 0..2:
+        if board[br+dr][bc+dc] == d: return false
+    return true</code></pre>
+
+  <h2>Conflict Detection <span style="font-weight:400;font-size:12px;">(SudokuGrid.hasConflict)</span></h2>
+  <pre><code>hasConflict(board, row, col):
+    cell ← board[row][col]
+    if cell.isGiven: return false        // given cells never highlighted red
+    if cell.value == 0: return false     // empty cells not in conflict
+    v ← cell.value
+    for c in 0..8:
+        if c ≠ col  and board[row][c].value == v: return true
+    for r in 0..8:
+        if r ≠ row  and board[r][col].value == v: return true
+    br ← (row/3)*3;  bc ← (col/3)*3
+    for dr in 0..2, dc in 0..2:
+        r2 ← br+dr;  c2 ← bc+dc
+        if (r2,c2) ≠ (row,col) and board[r2][c2].value == v: return true
+    return false</code></pre>
+
+  <div class="callout">If a user places a digit that duplicates a given clue, only the user-placed cell turns red — the given cell is never highlighted as an error.</div>
+
+  <h2>Auto-Notes / Clues Toggle</h2>
+  <pre><code>toggleAutoNotes():
+    undoStack ← buildUndoStack(current)
+
+    if not current.autoNotesActive:
+        for each cell(r, c) in board:
+            if cell.value == 0:
+                candidates ← { d in 1..9 | canPlace(board, r, c, d) }
+                newBoard[r][c] ← cell.copy(notes = candidates)
+        state ← state.copy(board=newBoard, autoNotesActive=true, undoStack=undoStack)
+    else:
+        for each cell in board:
+            newBoard[r][c] ← cell.copy(notes = emptySet())
+        state ← state.copy(board=newBoard, autoNotesActive=false, undoStack=undoStack)
+
+canPlace(board, r, c, d):
+    for other cells in row r    : if .value == d: return false
+    for other cells in col c    : if .value == d: return false
+    for cells in 3×3 box        : if .value == d: return false
+    return true</code></pre>
+
+  <h2>Note Cleanup After Digit Placement</h2>
+  <pre><code>cleanNotesAfterPlacement(board, row, col, digit):
+    totalCount ← count of cells where .value == digit
+    if totalCount >= 9:
+        // digit fully placed — remove from all notes everywhere
+        for every cell: notes.remove(digit)
+    else:
+        // remove from same row, column, and 3×3 box only
+        for c in 0..8: board[row][c].notes.remove(digit)
+        for r in 0..8: board[r][col].notes.remove(digit)
+        br ← (row/3)*3;  bc ← (col/3)*3
+        for dr in 0..2, dc in 0..2:
+            board[br+dr][bc+dc].notes.remove(digit)</code></pre>
+
+  <h2>Undo Stack Management</h2>
+  <pre><code>buildUndoStack(state):
+    return (state.undoStack + state.board).takeLast(50)
+
+undo():
+    if undoStack.isEmpty(): return
+    previousBoard ← undoStack.last()
+    state ← state.copy(
+        board     = previousBoard,
+        undoStack = undoStack.dropLast(1)
+        // autoNotesActive NOT changed — Clues toggle is independent of undo
+    )</code></pre>
+
+  <h2>Completion Check</h2>
+  <pre><code>checkComplete(state):
+    for r in 0..8, c in 0..8:
+        if state.board[r][c].value == 0: return false
+        if state.board[r][c].value ≠ state.solution[r][c]: return false
+    return true
+// Called after every digit placement. On true: stops auto-save, increments stats.</code></pre>
+
+</div><!-- /content -->
+</body>
+</html>
