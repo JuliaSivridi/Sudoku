@@ -8,12 +8,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -30,6 +33,8 @@ fun NumberRow(
     board: List<List<Cell>>,
     selectedDigit: Int?,
     showSelection: Boolean,      // false в режиме Cell First — цифры не подсвечиваются
+    showDigitCount: Boolean = false, // показывать счётчик оставшихся цифр
+    isEnabled: Boolean = true,
     onDigitSelected: (Int) -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
@@ -43,11 +48,10 @@ fun NumberRow(
         }
     }
 
-    // 3 columns × 3 rows; each cell is as wide as one 3×3 box in the grid (1/3 of total width)
-    // Height = 1.5 × old square height → aspectRatio(2f): width = 2 × height
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .alpha(if (isEnabled) 1f else 0.35f)
             .border(1.dp, borderColor)
     ) {
         for (rowIdx in 0..2) {
@@ -69,6 +73,7 @@ fun NumberRow(
                     val digit = rowIdx * 3 + colIdx + 1
                     val isSelected = digit == selectedDigit
                     val isFull = digitCounts[digit] >= 9
+                    val remaining = 9 - digitCounts[digit]
 
                     Box(
                         modifier = Modifier
@@ -90,7 +95,7 @@ fun NumberRow(
                                 }
                             }
                             .then(
-                                if (!isFull) Modifier.clickable { onDigitSelected(digit) }
+                                if (!isFull && isEnabled) Modifier.clickable { onDigitSelected(digit) }
                                 else Modifier
                             ),
                         contentAlignment = Alignment.Center
@@ -104,6 +109,19 @@ fun NumberRow(
                                 color = if (highlighted) appColors.accent
                                         else MaterialTheme.colorScheme.onBackground
                             )
+
+                            // Счётчик оставшихся цифр — правый верхний угол
+                            if (showDigitCount) {
+                                Text(
+                                    text = remaining.toString(),
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.45f),
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(top = 4.dp, end = 7.dp)
+                                )
+                            }
                         }
                     }
                 }

@@ -21,9 +21,15 @@ A clean, minimal Sudoku app for Android built with Kotlin and Jetpack Compose.
 - **Clues** toggle — show all valid candidates across the board; toggle off to clear them all
 - Conflict highlighting — wrong digits shown in red; detects duplicates against both given and user-placed digits
 - Undo — step back through every move all the way to the start
-- Hints — reveal a correct digit in any empty cell (unlimited)
+- Hints — reveal a correct digit; tap a cell first to hint that specific cell, or leave nothing selected for a random empty cell
 - Auto-complete digit pad — once a digit is placed 9 times it disappears from the number pad
 - Motivational finish screen — a random encouraging message on completion
+
+**Optional gameplay settings**
+- **Timer** — shows elapsed mm:ss with a pause button; pausing hides all board digits
+- **Error limit** — end the game after a set number of mistakes; shows a live error counter during play
+- **Hint limit** — cap the number of hints per game; remaining count shown as a badge on the Hint button
+- **Digit count** — show how many of each digit remain to be placed (badge on the number pad)
 
 **Solver**
 - Enter any puzzle (from a newspaper, another app, etc.) and tap **Solve**
@@ -34,6 +40,7 @@ A clean, minimal Sudoku app for Android built with Kotlin and Jetpack Compose.
 
 **Statistics**
 - Tracks completed games per difficulty (Easy / Medium / Hard)
+- Shows best completion time per difficulty (when Timer is enabled)
 
 **Themes**
 - Four color themes: Orange, Green, Blue, Purple
@@ -74,7 +81,7 @@ No API keys or external services required — everything runs on-device.
 ## How to Play
 
 1. Pick a difficulty on the start screen
-2. **Number first mode** (default): select a digit in the number pad, then tap an empty cell to place it
+2. **Number first mode** (default): select a digit in the number pad, then tap an empty cell to place it  
    **Cell first mode**: tap a cell to select it, then tap a digit to place it — great for filling notes without switching focus
 3. Use **Notes** to pencil in candidates — they auto-clear as the board fills; tap **Clues** to fill all valid candidates at once, tap again to clear them
 4. Use **Undo** to step back, **Hint** to reveal a correct digit

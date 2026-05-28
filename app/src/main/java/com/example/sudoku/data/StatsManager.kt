@@ -13,4 +13,18 @@ class StatsManager(context: Context) {
     }
 
     fun getCount(difficulty: Difficulty): Int = prefs.getInt(difficulty.name, 0)
+
+    /** Лучшее время в секундах, null если ещё не зафиксировано. */
+    fun getBestTime(difficulty: Difficulty): Long? {
+        val v = prefs.getLong("best_${difficulty.name}", -1L)
+        return if (v < 0L) null else v
+    }
+
+    /** Обновляет лучшее время, если переданное значение лучше текущего. */
+    fun updateBestTime(difficulty: Difficulty, seconds: Long) {
+        val current = getBestTime(difficulty)
+        if (current == null || seconds < current) {
+            prefs.edit().putLong("best_${difficulty.name}", seconds).apply()
+        }
+    }
 }

@@ -51,9 +51,16 @@ class GameSaveManager(context: Context) {
             }
             root.put("solution", solutionJson)
 
+            // Таймер, ошибки, подсказки
+            root.put("timer_enabled", state.timerEnabled)
+            root.put("elapsed", state.elapsedSeconds)
+            root.put("error_limit", state.errorLimit)
+            root.put("errors", state.errorCount)
+            root.put("hints_remaining", state.hintsRemaining)
+
             prefs.edit().putString(KEY_SAVED_GAME, root.toString()).apply()
         } catch (e: Exception) {
-            // If serialization fails, leave any existing save intact
+            // Если сериализация не удалась — оставляем предыдущее сохранение
         }
     }
 
@@ -88,6 +95,13 @@ class GameSaveManager(context: Context) {
                 List(9) { c -> rowJson.getInt(c) }
             }
 
+            // Обратная совместимость: поля отсутствуют в старых сохранениях
+            val timerEnabled = if (root.has("timer_enabled")) root.getBoolean("timer_enabled") else false
+            val elapsedSeconds = if (root.has("elapsed")) root.getInt("elapsed") else 0
+            val errorLimit = if (root.has("error_limit")) root.getInt("error_limit") else 0
+            val errorCount = if (root.has("errors")) root.getInt("errors") else 0
+            val hintsRemaining = if (root.has("hints_remaining")) root.getInt("hints_remaining") else -1
+
             GameState(
                 board = board,
                 solution = solution,
@@ -96,7 +110,12 @@ class GameSaveManager(context: Context) {
                 selectedDigit = null,
                 inputMode = com.example.sudoku.model.InputMode.NORMAL,
                 isComplete = false,
-                undoStack = emptyList()
+                undoStack = emptyList(),
+                timerEnabled = timerEnabled,
+                elapsedSeconds = elapsedSeconds,
+                errorLimit = errorLimit,
+                errorCount = errorCount,
+                hintsRemaining = hintsRemaining,
             )
         } catch (e: Exception) {
             null

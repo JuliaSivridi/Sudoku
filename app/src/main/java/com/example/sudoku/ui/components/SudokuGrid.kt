@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -46,109 +47,135 @@ import com.example.sudoku.ui.theme.NoteNumberLight
 fun SudokuGrid(
     state: GameState,
     onCellTap: (Int, Int) -> Unit,
-    isSolverMode: Boolean = false
+    isSolverMode: Boolean = false,
+    isPaused: Boolean = false,
 ) {
     val isDark = isSystemInDarkTheme()
     val appColors = LocalAppThemeColors.current
     val outerBorder = if (isDark) GridOuterBorderDark else GridOuterBorderLight
     val innerBorder = if (isDark) GridInnerBorderDark else GridInnerBorderLight
 
+    // Внешний Box занимает квадратную область; внутри — сетка и опциональный оверлей паузы
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(1f)
-            .drawWithContent {
-                drawContent()
-
-                val cellW = size.width / 9f
-                val cellH = size.height / 9f
-                val thin = 1.dp.toPx()
-                val thick = 2.dp.toPx()
-
-                // Внутренние линии — рисуем поверх ячеек
-                for (i in 1..8) {
-                    val isBoxBoundary = i % 3 == 0
-                    val color = if (isBoxBoundary) outerBorder else innerBorder
-                    val stroke = if (isBoxBoundary) thick else thin
-
-                    drawLine(
-                        color = color,
-                        start = Offset(0f, i * cellH),
-                        end = Offset(size.width, i * cellH),
-                        strokeWidth = stroke
-                    )
-                    drawLine(
-                        color = color,
-                        start = Offset(i * cellW, 0f),
-                        end = Offset(i * cellW, size.height),
-                        strokeWidth = stroke
-                    )
-                }
-
-                // Внешняя рамка — всегда поверх всего
-                val half = thick / 2f
-                drawLine(outerBorder, Offset(half, 0f), Offset(half, size.height), thick)
-                drawLine(outerBorder, Offset(size.width - half, 0f), Offset(size.width - half, size.height), thick)
-                drawLine(outerBorder, Offset(0f, half), Offset(size.width, half), thick)
-                drawLine(outerBorder, Offset(0f, size.height - half), Offset(size.width, size.height - half), thick)
-            }
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            for (row in 0..8) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                ) {
-                    for (col in 0..8) {
-                        val cell = state.board[row][col]
-                        val isSelected = state.selectedCell == Pair(row, col)
-                        val isHighlighted = isInHighlightArea(state, row, col)
-                        val isDigitMatch = state.selectedDigit != null &&
-                                cell.value != 0 &&
-                                cell.value == state.selectedDigit
-                        val isConflict = !isSolverMode && hasConflict(state.board, row, col)
+        // Сетка с рамками, нарисованными поверх ячеек
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .drawWithContent {
+                    drawContent()
 
-                        val bgColor = when {
-                            isSelected -> if (isDark) CellSelectedDark else CellSelectedLight
-                            isDigitMatch -> if (isDark) appColors.cellDigitHighlightDark else appColors.cellDigitHighlightLight
-                            isHighlighted -> if (isDark) CellHighlightDark else CellHighlightLight
-                            else -> Color.Transparent
-                        }
-                        val conflictBg = if (isConflict) {
-                            if (isDark) ConflictBgDark else ConflictBgLight
-                        } else Color.Transparent
+                    val cellW = size.width / 9f
+                    val cellH = size.height / 9f
+                    val thin = 1.dp.toPx()
+                    val thick = 2.dp.toPx()
 
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .background(bgColor)
-                                .background(conflictBg)
-                                .clickable { onCellTap(row, col) },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (cell.notes.isNotEmpty() && cell.value == 0) {
-                                NotesGrid(notes = cell.notes, isDark = isDark)
-                            } else if (cell.value != 0) {
-                                val textColor = when {
-                                    isSolverMode -> if (isDark) appColors.userNumberDark else appColors.userNumberLight
-                                    cell.isGiven -> if (isDark) GivenNumberDark else GivenNumberLight
-                                    !isSolverMode && hasConflict(state.board, row, col) ->
-                                        if (isDark) ConflictColorDark else ConflictColorLight
-                                    else -> if (isDark) appColors.userNumberDark else appColors.userNumberLight
+                    for (i in 1..8) {
+                        val isBoxBoundary = i % 3 == 0
+                        val color = if (isBoxBoundary) outerBorder else innerBorder
+                        val stroke = if (isBoxBoundary) thick else thin
+
+                        drawLine(
+                            color = color,
+                            start = Offset(0f, i * cellH),
+                            end = Offset(size.width, i * cellH),
+                            strokeWidth = stroke
+                        )
+                        drawLine(
+                            color = color,
+                            start = Offset(i * cellW, 0f),
+                            end = Offset(i * cellW, size.height),
+                            strokeWidth = stroke
+                        )
+                    }
+
+                    val half = thick / 2f
+                    drawLine(outerBorder, Offset(half, 0f), Offset(half, size.height), thick)
+                    drawLine(outerBorder, Offset(size.width - half, 0f), Offset(size.width - half, size.height), thick)
+                    drawLine(outerBorder, Offset(0f, half), Offset(size.width, half), thick)
+                    drawLine(outerBorder, Offset(0f, size.height - half), Offset(size.width, size.height - half), thick)
+                }
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                for (row in 0..8) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    ) {
+                        for (col in 0..8) {
+                            val cell = state.board[row][col]
+                            val isSelected = !isPaused && state.selectedCell == Pair(row, col)
+                            val isHighlighted = !isPaused && isInHighlightArea(state, row, col)
+                            val isDigitMatch = !isPaused && state.selectedDigit != null &&
+                                    cell.value != 0 &&
+                                    cell.value == state.selectedDigit
+                            val isConflict = !isSolverMode && !isPaused && hasConflict(state.board, row, col)
+
+                            val bgColor = when {
+                                isPaused -> Color.Transparent
+                                isSelected -> if (isDark) CellSelectedDark else CellSelectedLight
+                                isDigitMatch -> if (isDark) appColors.cellDigitHighlightDark else appColors.cellDigitHighlightLight
+                                isHighlighted -> if (isDark) CellHighlightDark else CellHighlightLight
+                                else -> Color.Transparent
+                            }
+                            val conflictBg = if (isConflict) {
+                                if (isDark) ConflictBgDark else ConflictBgLight
+                            } else Color.Transparent
+
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .background(bgColor)
+                                    .background(conflictBg)
+                                    .clickable { onCellTap(row, col) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (!isPaused) {
+                                    if (cell.notes.isNotEmpty() && cell.value == 0) {
+                                        NotesGrid(notes = cell.notes, isDark = isDark)
+                                    } else if (cell.value != 0) {
+                                        val textColor = when {
+                                            isSolverMode -> if (isDark) appColors.userNumberDark else appColors.userNumberLight
+                                            cell.isGiven -> if (isDark) GivenNumberDark else GivenNumberLight
+                                            !isSolverMode && hasConflict(state.board, row, col) ->
+                                                if (isDark) ConflictColorDark else ConflictColorLight
+                                            else -> if (isDark) appColors.userNumberDark else appColors.userNumberLight
+                                        }
+                                        Text(
+                                            text = cell.value.toString(),
+                                            fontSize = 24.sp,
+                                            fontWeight = if (!isSolverMode && cell.isGiven) FontWeight.Bold else FontWeight.Normal,
+                                            color = textColor,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
                                 }
-                                Text(
-                                    text = cell.value.toString(),
-                                    fontSize = 24.sp,
-                                    fontWeight = if (!isSolverMode && cell.isGiven) FontWeight.Bold else FontWeight.Normal,
-                                    color = textColor,
-                                    textAlign = TextAlign.Center
-                                )
                             }
                         }
                     }
                 }
+            }
+        }
+
+        // Оверлей паузы поверх всего (включая рамки)
+        if (isPaused) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.88f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Paused",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
@@ -200,7 +227,6 @@ private fun isInHighlightArea(state: GameState, row: Int, col: Int): Boolean {
 }
 
 // Конфликт: пользовательская ячейка совпадает с любой другой ячейкой в той же строке/столбце/квадрате.
-// Данные (isGiven) ячейки не подсвечиваем — ранний return false.
 private fun hasConflict(board: List<List<Cell>>, row: Int, col: Int): Boolean {
     val cell = board[row][col]
     if (cell.isGiven || cell.value == 0) return false

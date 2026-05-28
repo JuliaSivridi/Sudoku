@@ -13,10 +13,12 @@ import androidx.navigation.navArgument
 import com.example.sudoku.model.Difficulty
 import com.example.sudoku.ui.screens.EndScreen
 import com.example.sudoku.ui.screens.GameScreen
+import com.example.sudoku.ui.screens.LoseScreen
 import com.example.sudoku.ui.screens.SettingsScreen
 import com.example.sudoku.ui.screens.SolverScreen
 import com.example.sudoku.ui.screens.StartScreen
 import com.example.sudoku.ui.screens.StatisticsScreen
+import com.example.sudoku.viewmodel.GameSettingsViewModel
 import com.example.sudoku.viewmodel.GameViewModel
 import com.example.sudoku.viewmodel.InputPreferenceViewModel
 import com.example.sudoku.viewmodel.SolverViewModel
@@ -26,6 +28,7 @@ object Routes {
     const val START = "start"
     const val GAME = "game/{difficulty}?loadSaved={loadSaved}"
     const val END = "end/{difficulty}"
+    const val LOSE = "lose/{difficulty}"
     const val SOLVER = "solver"
     const val STATISTICS = "statistics"
     const val SETTINGS = "settings"
@@ -33,6 +36,7 @@ object Routes {
     fun game(difficulty: Difficulty) = "game/${difficulty.name}?loadSaved=false"
     fun continueGame() = "game/SAVED?loadSaved=true"
     fun end(difficulty: Difficulty) = "end/${difficulty.name}"
+    fun lose(difficulty: Difficulty) = "lose/${difficulty.name}"
 }
 
 @Composable
@@ -43,14 +47,18 @@ fun AppNavigation(
     val navController = rememberNavController()
     val viewModel: GameViewModel = viewModel()
     val solverViewModel: SolverViewModel = viewModel()
+    val gameSettingsViewModel: GameSettingsViewModel = viewModel()
     val inputPreference by inputPreferenceViewModel.preference.collectAsState()
+    val gameSettings by gameSettingsViewModel.settings.collectAsState()
 
     NavHost(navController = navController, startDestination = Routes.START) {
 
         composable(Routes.START) {
             StartScreen(
                 onDifficultySelected = { difficulty ->
-                    viewModel.startGame(difficulty)
+                    val errorLimit = if (gameSettings.errorLimitEnabled) gameSettings.errorLimit else 0
+                    val hintLimit = if (gameSettings.hintLimitEnabled) gameSettings.hintLimit else 0
+                    viewModel.startGame(difficulty, gameSettings.timerEnabled, errorLimit, hintLimit)
                     navController.navigate(Routes.game(difficulty))
                 },
                 onContinueGame = {
@@ -89,17 +97,20 @@ fun AppNavigation(
             GameScreen(
                 viewModel = viewModel,
                 inputPreference = inputPreference,
+                timerEnabled = gameSettings.timerEnabled,
+                digitCountEnabled = gameSettings.digitCountEnabled,
                 onGameComplete = {
                     val currentDifficulty = viewModel.state.value.difficulty
                     navController.navigate(Routes.end(currentDifficulty)) {
                         popUpTo(Routes.START)
                     }
                 },
-                onBack = {
-                    navController.navigate(Routes.START) {
-                        popUpTo(Routes.START) { inclusive = true }
+                onGameLost = {
+                    val currentDifficulty = viewModel.state.value.difficulty
+                    navController.navigate(Routes.lose(currentDifficulty)) {
+                        popUpTo(Routes.START)
                     }
-                }
+                },
             )
         }
 
@@ -111,7 +122,35 @@ fun AppNavigation(
             val difficulty = try { Difficulty.valueOf(difficultyName) } catch (e: IllegalArgumentException) { Difficulty.EASY }
             EndScreen(
                 onPlayAgain = {
-                    viewModel.startGame(difficulty)
+                    val errorLimit = if (gameSettings.errorLimitEnabled) gameSettings.errorLimit else 0
+                    val hintLimit = if (gameSettings.hintLimitEnabled) gameSettings.hintLimit else 0
+                    viewModel.startGame(difficulty, gameSettings.timerEnabled, errorLimit, hintLimit)
+                    navController.navigate(Routes.game(difficulty)) {
+                        popUpTo(Routes.START)
+                    }
+                },
+                onMenu = {
+                    navController.navigate(Routes.START) {
+                        popUpTo(Routes.START) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Routes.LOSE,
+            arguments = listOf(navArgument("difficulty") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val difficultyName = backStackEntry.arguments?.getString("difficulty") ?: Difficulty.EASY.name
+            val difficulty = try { Difficulty.valueOf(difficultyName) } catch (e: IllegalArgumentException) { Difficulty.EASY }
+            val lostState = viewModel.state.value
+            LoseScreen(
+                errorCount = lostState.errorCount,
+                errorLimit = lostState.errorLimit,
+                onTryAgain = {
+                    val errorLimit = if (gameSettings.errorLimitEnabled) gameSettings.errorLimit else 0
+                    val hintLimit = if (gameSettings.hintLimitEnabled) gameSettings.hintLimit else 0
+                    viewModel.startGame(difficulty, gameSettings.timerEnabled, errorLimit, hintLimit)
                     navController.navigate(Routes.game(difficulty)) {
                         popUpTo(Routes.START)
                     }
@@ -137,6 +176,7 @@ fun AppNavigation(
 
         composable(Routes.STATISTICS) {
             StatisticsScreen(
+                timerEnabled = gameSettings.timerEnabled,
                 onHomeSelected = {
                     navController.navigate(Routes.START) {
                         popUpTo(Routes.START) { inclusive = true }
@@ -157,6 +197,13 @@ fun AppNavigation(
                 onThemeSelected = { themeViewModel.setTheme(it) },
                 currentInputPreference = inputPreference,
                 onInputPreferenceSelected = { inputPreferenceViewModel.setPreference(it) },
+                gameSettings = gameSettings,
+                onTimerEnabledChanged = { gameSettingsViewModel.setTimerEnabled(it) },
+                onErrorLimitEnabledChanged = { gameSettingsViewModel.setErrorLimitEnabled(it) },
+                onErrorLimitChanged = { gameSettingsViewModel.setErrorLimit(it) },
+                onHintLimitEnabledChanged = { gameSettingsViewModel.setHintLimitEnabled(it) },
+                onHintLimitChanged = { gameSettingsViewModel.setHintLimit(it) },
+                onDigitCountEnabledChanged = { gameSettingsViewModel.setDigitCountEnabled(it) },
                 onHomeSelected = {
                     navController.navigate(Routes.START) {
                         popUpTo(Routes.START) { inclusive = true }

@@ -1,6 +1,6 @@
 # Stler Sudoku — Technical Specification
 
-**Version:** 1.3 (versionCode 5)  
+**Version:** 1.4 (versionCode 6)  
 **Platform:** Android 8.0+ (API 26 – 36)  
 **App ID:** `io.github.juliasivridi.sudoku`  
 **Repository:** github.com/JuliaSivridi/Sudoku  
@@ -28,7 +28,7 @@
 
 ## 1. Overview
 
-Stler Sudoku is a local-only Android puzzle game with no network dependencies or user accounts. The player solves 9×9 Sudoku grids at three difficulty levels, aided by optional pencil marks (Notes), an auto-fill candidates toggle (Clues), and a hint system.
+Stler Sudoku is a local-only Android puzzle game with no network dependencies or user accounts. The player solves 9×9 Sudoku grids at three difficulty levels, aided by optional pencil marks (Notes), an auto-fill candidates toggle (Clues), a hint system, and a range of optional gameplay settings (timer, error limit, hint limit, digit-remaining counter).
 
 | Decision | Choice | Rationale |
 |---|---|---|
@@ -38,7 +38,7 @@ Stler Sudoku is a local-only Android puzzle game with no network dependencies or
 | Persistence | SharedPreferences + `org.json` | No relational data; simple key-value and one serialised object suffice |
 | Input mode | Two modes switchable in Settings | Supports digit-first and cell-first play styles without cluttering the game UI |
 | Puzzle uniqueness | Backtracking solver with `countSolutions(limit=2)` | Guarantees exactly one solution per generated puzzle |
-| No timer / error counter | Intentionally omitted | Design choice: relaxed, pressure-free gameplay |
+| Gameplay options | Timer, error limit, hint limit, digit count — all opt-in | Relaxed defaults; power users can opt into pressure mechanics |
 | No network | Fully offline | No server cost, no auth complexity, works without connectivity |
 
 ---
@@ -92,7 +92,7 @@ Composable re-renders
 1. User taps a cell → `GameScreen` receives via `onCellTap` or `NumberRow.onDigitSelected`
 2. Based on `InputPreference`, routes to `viewModel.onCellTap()` or `viewModel.placeDigit()`
 3. ViewModel mutates a copy of `GameState`, pushes to `_state` (StateFlow)
-4. The `init {}` collector fires auto-save to `GameSaveManager`
+4. The `init {}` collector fires auto-save to `GameSaveManager` (only when `board` changed)
 5. `collectAsState()` in `GameScreen` delivers the new state to `SudokuGrid`, `ControlButtons`, `NumberRow`
 
 ### Read path — example: Continue button on Start screen
@@ -100,7 +100,7 @@ Composable re-renders
 1. `StartScreen` calls `GameSaveManager.hasSavedGame()` on composition
 2. If `true`, the Continue button is rendered
 3. On tap, navigates to the `GAME` route with `loadSaved=true`
-4. `GameViewModel.loadSavedGame()` reads JSON and restores `GameState`
+4. `GameViewModel.loadSavedGame()` reads JSON and restores `GameState`; if `timerEnabled` is `true`, the timer coroutine is restarted
 
 ### Error handling
 
@@ -116,8 +116,9 @@ Composable re-renders
 | `SolverViewModel` | `ViewModel` | `StateFlow<SolverState>` | `SolverScreen` |
 | `InputPreferenceViewModel` | `AndroidViewModel` | `StateFlow<InputPreference>` | `AppNavigation` → `GameScreen`, `SettingsScreen` |
 | `ThemeViewModel` | `AndroidViewModel` | `StateFlow<AppColorTheme>` | `MainActivity`, `AppNavigation`, `SettingsScreen` |
+| `GameSettingsViewModel` | `AndroidViewModel` | `StateFlow<GameSettings>` | `AppNavigation` → `GameScreen`, `SettingsScreen`, `StatisticsScreen` |
 
-`GameViewModel` and `SolverViewModel` are scoped to the `NavHost` (created once in `AppNavigation`); they survive intra-app navigation. `ThemeViewModel` and `InputPreferenceViewModel` are created in `MainActivity` and passed down as parameters.
+`GameViewModel` and `SolverViewModel` are scoped to the `NavHost` (created once in `AppNavigation`); they survive intra-app navigation. `ThemeViewModel` and `InputPreferenceViewModel` are created in `MainActivity` and passed down as parameters. `GameSettingsViewModel` is created inside `AppNavigation`.
 
 ---
 
@@ -141,12 +142,14 @@ app/src/main/
     │
     ├── data/
     │   ├── GameSaveManager.kt       ← JSON serialise/deserialise GameState ↔ SharedPreferences
-    │   ├── StatsManager.kt          ← per-difficulty completed-game counters
+    │   ├── GameSettingsManager.kt   ← persists all GameSettings fields in "sudoku_settings"
+    │   ├── StatsManager.kt          ← per-difficulty game counters + best times
     │   ├── InputPreferenceManager.kt← persists InputPreference enum name
     │   └── ThemeManager.kt          ← persists AppColorTheme enum name
     │
     ├── viewmodel/
-    │   ├── GameViewModel.kt         ← all game logic (AndroidViewModel)
+    │   ├── GameViewModel.kt         ← all game logic + timer coroutine (AndroidViewModel)
+    │   ├── GameSettingsViewModel.kt ← thin ViewModel over GameSettingsManager
     │   ├── SolverViewModel.kt       ← standalone solver screen logic
     │   ├── InputPreferenceViewModel.kt ← thin ViewModel over InputPreferenceManager
     │   └── ThemeViewModel.kt        ← thin ViewModel over ThemeManager
@@ -161,17 +164,18 @@ app/src/main/
         │   └── Type.kt              ← Typography (bodyLarge only)
         │
         ├── components/
-        │   ├── SudokuGrid.kt        ← 9×9 grid with canvas borders, highlights, notes sub-grid
-        │   ├── ControlButtons.kt    ← 5-button action row: Undo / Clear / Notes / Clues / Hint
-        │   └── NumberRow.kt         ← 3×3 digit picker with count-based disable
+        │   ├── SudokuGrid.kt        ← 9×9 grid with canvas borders, highlights, notes sub-grid, pause overlay
+        │   ├── ControlButtons.kt    ← 5-button action row: Undo / Clear / Notes / Clues / Hint (with badge)
+        │   └── NumberRow.kt         ← 3×3 digit picker with count-based disable + remaining-digit badges
         │
         └── screens/
             ├── StartScreen.kt       ← home screen + BottomNavBar + MenuButton
-            ├── GameScreen.kt        ← active game; routes input by InputPreference
+            ├── GameScreen.kt        ← active game; single header row; routes input by InputPreference
             ├── EndScreen.kt         ← completion screen with motivational message
+            ├── LoseScreen.kt        ← game-over screen shown when error limit is reached
             ├── SolverScreen.kt      ← manual solver; reuses SudokuGrid
-            ├── StatisticsScreen.kt  ← per-difficulty completed counts
-            └── SettingsScreen.kt    ← input mode toggle + theme selector
+            ├── StatisticsScreen.kt  ← per-difficulty completed counts + optional best times
+            └── SettingsScreen.kt    ← input mode, gameplay options, theme selector
 ```
 
 Root / CI files:
@@ -183,6 +187,7 @@ Root / CI files:
 ├── gradle/libs.versions.toml        ← version catalog for all dependencies
 ├── gradle.properties                ← -Xmx2048m; kotlin.code.style=official
 ├── app/build.gradle.kts             ← SDK config; signing; dependencies
+├── screenshots/                     ← light.jpg + dark.jpg (store listing)
 └── .github/workflows/release.yml   ← CI/CD: APK + AAB release pipeline
 ```
 
@@ -227,8 +232,28 @@ Root / CI files:
 | `isComplete` | `Boolean` | `false` | `true` when all 81 cells match the solution |
 | `autoNotesActive` | `Boolean` | `false` | `true` while Clues mode is on |
 | `undoStack` | `List<List<List<Cell>>>` | `emptyList()` | Board snapshots; max 50 entries |
+| `timerEnabled` | `Boolean` | `false` | Whether the timer is active for this session |
+| `elapsedSeconds` | `Int` | `0` | Seconds elapsed since game start |
+| `isTimerPaused` | `Boolean` | `false` | `true` while timer is paused; board is hidden |
+| `errorLimit` | `Int` | `0` | Max allowed errors; `0` = no limit |
+| `errorCount` | `Int` | `0` | Number of incorrect digits placed so far |
+| `isLost` | `Boolean` | `false` | `true` when `errorCount >= errorLimit > 0` |
+| `hintsRemaining` | `Int` | `-1` | `-1` = unlimited; `0` = exhausted; `>0` = remaining count |
 
 > **Note:** `undoStack` stores board states only — not `inputMode`, `selectedCell`, or `autoNotesActive`. Undoing restores the board layout but leaves the Clues toggle state unchanged (intentional decoupling).
+
+> **Note:** All action methods in `GameViewModel` guard with `if (state.isTimerPaused) return` — the board is frozen while paused.
+
+### `GameSettings` *(data class in `GameSettingsViewModel.kt`)*
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `timerEnabled` | `Boolean` | `false` | Show elapsed time and pause button |
+| `errorLimitEnabled` | `Boolean` | `false` | Enable error-count limit |
+| `errorLimit` | `Int` | `3` | Max errors when `errorLimitEnabled == true` |
+| `hintLimitEnabled` | `Boolean` | `false` | Enable hint count limit |
+| `hintLimit` | `Int` | `5` | Max hints when `hintLimitEnabled == true` |
+| `digitCountEnabled` | `Boolean` | `false` | Show remaining-digit badges on number pad |
 
 ### `InputPreference`
 
@@ -289,6 +314,20 @@ All persistence uses Android `SharedPreferences`. There is no SQLite database, n
 | `"EASY"` | `Int` | `0` | `StatsManager` | Completed Easy game count |
 | `"MEDIUM"` | `Int` | `0` | `StatsManager` | Completed Medium game count |
 | `"HARD"` | `Int` | `0` | `StatsManager` | Completed Hard game count |
+| `"best_EASY"` | `Long` | `-1` | `StatsManager` | Best completion time in seconds; `-1` = not set |
+| `"best_MEDIUM"` | `Long` | `-1` | `StatsManager` | Best completion time in seconds; `-1` = not set |
+| `"best_HARD"` | `Long` | `-1` | `StatsManager` | Best completion time in seconds; `-1` = not set |
+
+### File: `"sudoku_settings"`
+
+| Key | Type | Default | Written by | Purpose |
+|---|---|---|---|---|
+| `"timer_enabled"` | `Boolean` | `false` | `GameSettingsManager` | Timer enabled |
+| `"error_limit_enabled"` | `Boolean` | `false` | `GameSettingsManager` | Error limit enabled |
+| `"error_limit"` | `Int` | `3` | `GameSettingsManager` | Error limit value |
+| `"hint_limit_enabled"` | `Boolean` | `false` | `GameSettingsManager` | Hint limit enabled |
+| `"hint_limit"` | `Int` | `5` | `GameSettingsManager` | Hint limit value |
+| `"digit_count_enabled"` | `Boolean` | `false` | `GameSettingsManager` | Digit-remaining badges enabled |
 
 ### JSON schema — `"saved_game"` value
 
@@ -303,7 +342,12 @@ All persistence uses Android `SharedPreferences`. There is no SQLite database, n
   ],
   "solution": [
     [5, 3, 4, 6, 7, 8, 9, 1, 2]
-  ]
+  ],
+  "timer_enabled": true,
+  "elapsed": 142,
+  "error_limit": 3,
+  "errors": 1,
+  "hints_remaining": 4
 }
 ```
 
@@ -315,11 +359,17 @@ All persistence uses Android `SharedPreferences`. There is no SQLite database, n
 | `"g"` | `Cell.isGiven` | Boolean |
 | `"n"` | `Cell.notes` | JSON array of Int |
 | `"difficulty"` | `Difficulty.name` | `"EASY"` / `"MEDIUM"` / `"HARD"` |
+| `"timer_enabled"` | `GameState.timerEnabled` | Boolean |
+| `"elapsed"` | `GameState.elapsedSeconds` | Int |
+| `"error_limit"` | `GameState.errorLimit` | Int |
+| `"errors"` | `GameState.errorCount` | Int |
+| `"hints_remaining"` | `GameState.hintsRemaining` | Int (`-1` = unlimited) |
 
-**Not serialised:** `selectedCell`, `selectedDigit`, `inputMode`, `isComplete`, `undoStack`, `autoNotesActive`. All reset to defaults on load.
+**Not serialised:** `selectedCell`, `selectedDigit`, `inputMode`, `isComplete`, `isLost`, `isTimerPaused`, `undoStack`, `autoNotesActive`. All reset to defaults on load.
 
 **Auto-save trigger** (in `GameViewModel.init {}`):
-- Save fires whenever any non-given cell has `value != 0`
+- Compares current `board` against `lastSavedBoardSnapshot`; save fires only when the board actually changed
+- This prevents a save on every timer tick (which fires every second)
 - Save is **removed** when `isComplete == true`
 
 ---
@@ -332,8 +382,9 @@ There is no user authentication, no onboarding wizard, and no remote configurati
 |---|---|
 | `ThemeManager` finds no `"color_theme"` | Defaults to `ORANGE` |
 | `InputPreferenceManager` finds no `"input_preference"` | Defaults to `NUMBER_FIRST` |
+| `GameSettingsManager` finds no `"sudoku_settings"` keys | All features default to off; error limit = 3; hint limit = 5 |
 | `GameSaveManager.hasSavedGame()` returns `false` | Continue button not shown on Start screen |
-| `StatsManager` finds no keys | Returns `0` for all difficulties |
+| `StatsManager` finds no keys | Returns `0` counts, `null` best times |
 | User selects a difficulty | Game starts immediately |
 
 No permissions are requested. No Google Play Services or Firebase dependencies. No network requests ever made.
@@ -362,10 +413,20 @@ No permissions are requested. No Google Play Services or Firebase dependencies. 
 
 **File:** `ui/screens/GameScreen.kt` · **Route:** `"game/{difficulty}?loadSaved={loadSaved}"`  
 **ViewModels:** `GameViewModel`  
-**Nav args:** `difficulty: String`, `loadSaved: Boolean` (default `false`)
+**Nav args:** `difficulty: String`, `loadSaved: Boolean` (default `false`)  
+**Parameters:** `timerEnabled: Boolean`, `digitCountEnabled: Boolean`, `onGameComplete: ()->Unit`, `onGameLost: ()->Unit`
 
-On `LaunchedEffect(unit)`: if `loadSaved == true` → `viewModel.loadSavedGame()`; else → `viewModel.startGame(difficulty)`.  
-On `LaunchedEffect(state.isComplete)`: if `isComplete == true` → calls `onGameComplete()`.
+On `LaunchedEffect(unit)`: if `loadSaved == true` → `viewModel.loadSavedGame()`.  
+On `LaunchedEffect(state.isComplete)`: if `true` → calls `onGameComplete()`.  
+On `LaunchedEffect(state.isLost)`: if `true` → calls `onGameLost()`.
+
+**Header row** (single `Row(fillMaxWidth)`):
+
+| Zone | Content | Condition |
+|---|---|---|
+| Left (`weight=1f`, `Arrangement.Start`) | `Icon(Outlined.Error, 18dp)` + `Text("errorCount/errorLimit", 18sp, onBackground@65%)` | only if `state.errorLimit > 0` |
+| Center | `Text(difficulty.label, 18sp, Bold, primary)` | always |
+| Right (`weight=1f`, `Arrangement.End`) | `Text(formatTime(elapsedSeconds), 18sp, Monospace, onBackground@65%)` + `Box(40dp) { Icon(Pause/PlayArrow, 28dp) }` | only if `timerEnabled` |
 
 Input routing by `InputPreference`:
 
@@ -375,6 +436,8 @@ Input routing by `InputPreference`:
 | Digit tapped | `viewModel.selectDigit(digit)` | `viewModel.placeDigit(digit)` |
 | Clear button | `viewModel.toggleErase()` | `viewModel.eraseSelected()` |
 | `NumberRow.showSelection` | `true` | `false` |
+
+All cell taps and control actions are no-ops while `isPaused == true`.
 
 ---
 
@@ -395,6 +458,16 @@ Motivational message pool:
 
 ---
 
+### LoseScreen
+
+**File:** `ui/screens/LoseScreen.kt` · **Route:** `"lose/{difficulty}"`  
+**ViewModels:** none  
+**Parameters:** `errorCount: Int`, `errorLimit: Int`, `onTryAgain: ()->Unit`, `onMenu: ()->Unit`
+
+Shown when `state.isLost == true` (error count reaches limit). Displays a 😔 emoji (72sp), "Game Over" (28sp bold), the message "You made `errorCount` out of `errorLimit` allowed mistakes.", plus "Try Again" and "Menu" buttons.
+
+---
+
 ### SolverScreen
 
 **File:** `ui/screens/SolverScreen.kt` · **Route:** `"solver"`  
@@ -407,22 +480,52 @@ The user manually enters digits of an unknown puzzle. All digits are shown in `a
 ### StatisticsScreen
 
 **File:** `ui/screens/StatisticsScreen.kt` · **Route:** `"statistics"`  
-**ViewModels:** none — reads `StatsManager` directly via `remember { StatsManager(context) }`
+**ViewModels:** none — reads `StatsManager` directly via `remember { StatsManager(context) }`  
+**Parameters:** `timerEnabled: Boolean`
 
-Shows completed-game counts in a bordered table (Mode | Completed). Counts are read once at composition — they are NOT reactive and do not update while the screen is open. `BottomNavBar` with stats tab selected.
+Shows completed-game counts and (optionally) best times in a bordered table. Counts are read once at composition — they are NOT reactive and do not update while the screen is open. `BottomNavBar` with stats tab selected.
+
+| Column | Header | Condition |
+|---|---|---|
+| Mode | `Text("Mode")`, weight 1.4f | always |
+| Played | `Icon(Outlined.CheckCircle, 16dp)`, weight 1f | always |
+| Best time | `Icon(Outlined.Timer, 16dp)`, weight 1f | only if `timerEnabled` |
+
+Best times are read from `StatsManager.getBestTime(difficulty)`. Returns `null` if no time recorded yet → shown as "—". Times are formatted as `mm:ss` in `FontFamily.Monospace`.
+
+> **Note:** Best times are stored even when the timer is disabled (they accumulate while the setting is on). Disabling the timer only hides the column — stored values are preserved.
 
 ---
 
 ### SettingsScreen
 
 **File:** `ui/screens/SettingsScreen.kt` · **Route:** `"settings"`  
-**State sources:** `InputPreferenceViewModel`, `ThemeViewModel` (passed as params from `AppNavigation`)
+**State sources:** `InputPreferenceViewModel`, `ThemeViewModel`, `GameSettingsViewModel` (passed as params from `AppNavigation`)
+
+The screen is vertically scrollable (`verticalScroll`).
 
 | Section | Component | Behaviour |
 |---|---|---|
 | Input mode | `SingleChoiceSegmentedButtonRow` with "Number first" / "Cell first" | Selection persisted immediately via `InputPreferenceViewModel` |
-| Theme | One full-width button per `AppColorTheme` entry | Button background = palette's `accent` color; checkmark on active theme; persisted via `ThemeViewModel` |
+| Gameplay | Four `SettingCheckboxRow` entries (see below) | Persisted via `GameSettingsViewModel` callbacks |
+| Theme | One full-width `Button` per `AppColorTheme` entry | Button background = palette's `accent` color; checkmark on active theme; persisted via `ThemeViewModel` |
 | Bottom bar | `BottomNavBar` | settings tab selected |
+
+**Gameplay settings rows** (`SettingCheckboxRow` composable):
+
+| Setting | Title | Description | Has stepper |
+|---|---|---|---|
+| Timer | "Timer" | "Show elapsed time and pause button during the game" | No |
+| Error limit | "Error limit" | "End the game after a set number of mistakes" | Yes (1–20) |
+| Hint limit | "Hint limit" | "Restrict the number of hints available per game" | Yes (1–20) |
+| Digit count | "Digit count" | "Show how many of each digit remain to be placed" | No |
+
+**`SettingCheckboxRow`:** `Surface(RoundedCornerShape(12dp), surfaceVariant@55%)` containing a `Row` with:
+- `Checkbox` (accent color when checked)
+- `Column` with title (15sp SemiBold) and description (12sp, onSurface@60%)
+- Optional `Stepper` (shown when `stepperValue != null` and the checkbox is enabled)
+
+**`Stepper`:** `Row { StepButton(Remove) · Text(value, 17sp, 30dp wide) · StepButton(Add) }`. Range 1–20. No keyboard. `StepButton` is a `Box(36dp, clickable if enabled)` with a `Icon(20dp)` centered; grayed out at range boundaries.
 
 ---
 
@@ -437,6 +540,9 @@ Shows completed-game counts in a bordered table (Mode | Completed). Counts are r
 | `state` | `GameState` | — | Full game state |
 | `onCellTap` | `(Int,Int)->Unit` | — | Callback (row, col) on cell tap |
 | `isSolverMode` | `Boolean` | `false` | Suppresses conflict highlighting; all cells treated as user-placed |
+| `isPaused` | `Boolean` | `false` | When `true`, hides all cell content and shows a "Paused" overlay |
+
+**Pause overlay:** When `isPaused == true`, all cell backgrounds are set to `Transparent` and no digit/note content is rendered. An overlay `Box(fillMaxSize, background(colorScheme.background@88%))` with `Text("Paused", 32sp, Bold, primary)` centered is drawn on top.
 
 **Cell background priority (highest wins):**
 
@@ -469,6 +575,8 @@ Conflict overlay (separate pass): `ConflictBg*` background + `ConflictColor*` te
 | `inputMode` | `InputMode` | — | Current input mode |
 | `isCellFirst` | `Boolean` | `false` | Changes Clear button active-state logic |
 | `isAutoNotesActive` | `Boolean` | `false` | Drives Clues button highlight |
+| `isEnabled` | `Boolean` | `true` | Dims entire row (`alpha 0.35f`) and blocks taps when `false` (used while paused) |
+| `hintsRemaining` | `Int` | `-1` | `-1` = unlimited; `0` = disabled (no badge); `>0` = badge shown |
 | `onUndo` | `()->Unit` | — | |
 | `onToggleErase` | `()->Unit` | — | |
 | `onToggleNotes` | `()->Unit` | — | |
@@ -483,6 +591,8 @@ Conflict overlay (separate pass): `ConflictBg*` background + `ConflictColor*` te
 | 4 | Clues | `Outlined.AutoAwesome` | `isAutoNotesActive` |
 | 5 | Hint | `Outlined.Lightbulb` | always `false` |
 
+**Hint button badge:** When `hintsRemaining > 0`, a small `Text(hintsRemaining.toString(), 9sp)` badge is drawn at `Alignment.TopEnd` with `offset(x=2.dp, y=-2.dp)`. When `hintsRemaining == 0` the badge is hidden and the button is visually dimmed (`onBackground@30%`) and non-clickable.
+
 Active state: `primary` (accent) tint, `FontWeight.SemiBold`, 12sp label.  
 Inactive state: `onBackground` tint, `FontWeight.Normal`.  
 Icon size: 28dp. Vertical padding: 10dp per button. Layout: `SpaceEvenly` Row, each button `weight(1f)`.
@@ -493,16 +603,20 @@ Icon size: 28dp. Vertical padding: 10dp per button. Layout: `SpaceEvenly` Row, e
 
 **File:** `ui/components/NumberRow.kt`
 
-| Parameter | Type | Purpose |
-|---|---|---|
-| `board` | `List<List<Cell>>` | Used to compute per-digit occurrence counts |
-| `selectedDigit` | `Int?` | Currently highlighted digit |
-| `showSelection` | `Boolean` | `false` in `CELL_FIRST` — digits tappable but never visually highlighted |
-| `onDigitSelected` | `(Int)->Unit` | Fires when user taps a non-full digit |
+| Parameter | Type | Default | Purpose |
+|---|---|---|---|
+| `board` | `List<List<Cell>>` | — | Used to compute per-digit occurrence counts |
+| `selectedDigit` | `Int?` | — | Currently highlighted digit |
+| `showSelection` | `Boolean` | — | `false` in `CELL_FIRST` — digits tappable but never visually highlighted |
+| `showDigitCount` | `Boolean` | `false` | When `true`, shows a remaining-count badge in the top-right corner of each digit cell |
+| `isEnabled` | `Boolean` | `true` | Dims entire component (`alpha 0.35f`) and blocks taps when `false` (used while paused) |
+| `onDigitSelected` | `(Int)->Unit` | — | Fires when user taps a non-full digit |
 
 **Layout:** 3-column × 3-row `Column`; outer `border(1dp, GridInnerBorder*)`. Rows separated by 1dp horizontal dividers; columns by 1dp vertical dividers. Each digit cell: `weight(1f)` + `aspectRatio(2f)` (width = 2× height). Font: 32sp.
 
 **Disable logic:** digit is "full" when count on board ≥ 9 — digit text is hidden, cell is not clickable.
+
+**Remaining-digit badge:** When `showDigitCount == true`, a `Text(remaining.toString(), 12sp, FontWeight.Medium, onBackground@45%)` is drawn at `Alignment.TopEnd` with `padding(top=4.dp, end=7.dp)`.
 
 **Selection highlight** (only when `showSelection == true`):
 - Background: `cellDigitHighlight*`
@@ -596,6 +710,7 @@ Three `NavigationBarItem`s: Home (`Outlined.Home`), Stats (`Outlined.Leaderboard
 | `START` | `"start"` | — |
 | `GAME` | `"game/{difficulty}?loadSaved={loadSaved}"` | `difficulty: String`, `loadSaved: Boolean` (default `false`) |
 | `END` | `"end/{difficulty}"` | `difficulty: String` |
+| `LOSE` | `"lose/{difficulty}"` | `difficulty: String` |
 | `SOLVER` | `"solver"` | — |
 | `STATISTICS` | `"statistics"` | — |
 | `SETTINGS` | `"settings"` | — |
@@ -604,17 +719,21 @@ Builder helpers in `Routes`:
 - `Routes.game(difficulty)` → `"game/${difficulty.name}?loadSaved=false"`
 - `Routes.continueGame()` → `"game/SAVED?loadSaved=true"`
 - `Routes.end(difficulty)` → `"end/${difficulty.name}"`
+- `Routes.lose(difficulty)` → `"lose/${difficulty.name}"`
 
 ### Back-Stack Management
 
 | Navigation event | `popUpTo` behaviour |
 |---|---|
 | Game complete → End screen | `popUpTo(START)` (exclusive) |
-| End "Menu" → Start | `popUpTo(START) { inclusive = true }` |
-| End "Play Again" → Game | `popUpTo(START)`, then navigate to GAME |
+| Game lost → Lose screen | `popUpTo(START)` (exclusive) |
+| End / Lose "Menu" → Start | `popUpTo(START) { inclusive = true }` |
+| End / Lose "Play Again / Try Again" → Game | `popUpTo(START)`, then navigate to GAME |
 | Solver / Stats / Settings → Start | `popUpTo(START) { inclusive = true }` |
 
 There are no deeplinks. The app has no `intent-filter` for custom URI schemes.
+
+**Back gesture:** Standard Android system back navigates via `NavController` default behavior. No explicit `BackHandler` overrides are used in the game screen — the system back gesture is sufficient since `START` remains in the back stack.
 
 ---
 
@@ -651,15 +770,15 @@ There are no deeplinks. The app has no `intent-filter` for custom URI schemes.
 | `compileSdk` | `36` |
 | `minSdk` | `26` |
 | `targetSdk` | `36` |
-| `versionCode` | `5` |
-| `versionName` | `"1.3"` |
+| `versionCode` | `6` |
+| `versionName` | `"1.4"` |
 | `isMinifyEnabled` | `false` |
 | Java source/target | `VERSION_11` |
 
 **To trigger a release build:**
 ```
-git tag v1.4
-git push origin v1.4
+git tag v1.4.0
+git push origin v1.4.0
 ```
 
 ---
@@ -789,6 +908,18 @@ hasConflict(board, row, col):
 
 > If a user places a digit that duplicates a given clue, only the user-placed cell turns red — the given cell is never highlighted as an error.
 
+### Error Detection (Solution-Based)
+
+```
+onDigitPlaced(row, col, digit):
+    if digit ≠ solution[row][col]:
+        errorCount++
+        if errorLimit > 0 and errorCount >= errorLimit:
+            isLost ← true
+```
+
+Error detection compares against the pre-computed solution, not against board conflicts. A digit is wrong if and only if it does not match the unique solution.
+
 ### Auto-Notes / Clues Toggle
 
 ```
@@ -856,4 +987,34 @@ checkComplete(state):
         if cell.value == 0: return false
         if cell.value ≠ state.solution[r][c]: return false
     return true
+```
+
+### Timer Coroutine
+
+```
+startTimerCoroutine():
+    timerJob = viewModelScope.launch {
+        while (true) {
+            delay(1000)
+            if (!state.isTimerPaused && !state.isComplete && !state.isLost):
+                state ← state.copy(elapsedSeconds = elapsedSeconds + 1)
+    }
+
+// On game complete: if timerEnabled → statsManager.updateBestTime(difficulty, elapsedSeconds)
+// timerJob?.cancel() called in ViewModel.onCleared()
+```
+
+### Hint Logic
+
+```
+hint():
+    if hintsRemaining == 0: return       // exhausted
+    if isTimerPaused: return
+
+    target ← selectedCell               // prefer selected cell
+             ?: random empty cell       // fallback to any empty cell
+    if target == null: return           // board full
+
+    place solution[target.row][target.col] at target
+    if hintsRemaining > 0: hintsRemaining--
 ```
