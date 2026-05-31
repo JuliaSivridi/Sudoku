@@ -1,7 +1,7 @@
 # Sudoku
 
 [![Google Play](https://img.shields.io/badge/Google_Play-414141?style=for-the-badge&logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=io.github.juliasivridi.sudoku)
-[![GitHub Release](https://img.shields.io/badge/GitHub_Release-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JuliaSivridi/Sudoku/releases/latest)
+[![Releases](https://img.shields.io/github/v/release/JuliaSivridi/Sudoku?style=for-the-badge&logo=github&logoColor=white&color=181717)](https://github.com/JuliaSivridi/Sudoku/releases)
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-34A853?style=for-the-badge&logo=android&logoColor=white)
