@@ -2,6 +2,13 @@
 
 A clean, minimal Sudoku app for Android built with Kotlin and Jetpack Compose.
 
+[![Google Play](https://img.shields.io/badge/Google_Play-414141?style=for-the-badge&logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=io.github.juliasivridi.sudoku)
+
+![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
+![Android](https://img.shields.io/badge/Android-34A853?style=for-the-badge&logo=android&logoColor=white)
+![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)
+![Android Studio](https://img.shields.io/badge/Android_Studio-3DDC84?style=for-the-badge&logo=androidstudio&logoColor=white)
+
 ---
 
 ## Screenshots
@@ -14,7 +21,7 @@ A clean, minimal Sudoku app for Android built with Kotlin and Jetpack Compose.
 
 ## Features
 
-**Gameplay**
+**🎮 Gameplay**
 - Three difficulty levels — Easy, Medium, Hard
 - Two input modes — **Number first** (pick digit, tap cell) or **Cell first** (tap cell, pick digit); switchable in Settings
 - Notes mode — pencil marks in a 3×3 mini-grid per cell; auto-clear when a digit is placed in the same row, column, or box
@@ -25,24 +32,24 @@ A clean, minimal Sudoku app for Android built with Kotlin and Jetpack Compose.
 - Auto-complete digit pad — once a digit is placed 9 times it disappears from the number pad
 - Motivational finish screen — a random encouraging message on completion
 
-**Optional gameplay settings**
+**⚙️ Optional gameplay settings**
 - **Timer** — shows elapsed mm:ss with a pause button; pausing hides all board digits
 - **Error limit** — end the game after a set number of mistakes; shows a live error counter during play
 - **Hint limit** — cap the number of hints per game; remaining count shown as a badge on the Hint button
 - **Digit count** — show how many of each digit remain to be placed (badge on the number pad)
 
-**Solver**
+**🔍 Solver**
 - Enter any puzzle (from a newspaper, another app, etc.) and tap **Solve**
 
-**Save & Continue**
+**💾 Save & Continue**
 - Current game saves automatically after every move
 - Resume from the main menu with the **Continue** button
 
-**Statistics**
+**📊 Statistics**
 - Tracks completed games per difficulty (Easy / Medium / Hard)
 - Shows best completion time per difficulty (when Timer is enabled)
 
-**Themes**
+**🎨 Themes**
 - Four color themes: Orange, Green, Blue, Purple
 - Each theme colors the accent, digit highlights, and user-placed numbers
 - Dark / light mode follows system setting automatically
@@ -53,13 +60,13 @@ A clean, minimal Sudoku app for Android built with Kotlin and Jetpack Compose.
 
 | Layer | Technology |
 |---|---|
-| Language | Kotlin |
-| UI | Jetpack Compose (Material 3) |
-| Architecture | ViewModel + StateFlow |
-| Navigation | Navigation Compose |
-| Persistence | SharedPreferences |
-| Icons | Material Icons Extended |
-| Min SDK | API 26 (Android 8.0) |
+| 🗣️ Language | Kotlin |
+| 🎨 UI | Jetpack Compose (Material 3) |
+| 🏗️ Architecture | ViewModel + StateFlow |
+| 🧭 Navigation | Navigation Compose |
+| 💾 Persistence | SharedPreferences |
+| ✨ Icons | Material Icons Extended |
+| 📱 Min SDK | API 26 (Android 8.0) |
 
 ---
 
