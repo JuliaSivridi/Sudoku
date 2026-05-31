@@ -1,13 +1,14 @@
 # Sudoku
 
-A clean, minimal Sudoku app for Android built with Kotlin and Jetpack Compose.
-
 [![Google Play](https://img.shields.io/badge/Google_Play-414141?style=for-the-badge&logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=io.github.juliasivridi.sudoku)
+[![GitHub Release](https://img.shields.io/badge/GitHub_Release-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JuliaSivridi/Sudoku/releases/latest)
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-34A853?style=for-the-badge&logo=android&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)
 ![Android Studio](https://img.shields.io/badge/Android_Studio-3DDC84?style=for-the-badge&logo=androidstudio&logoColor=white)
+
+A clean, minimal Sudoku app for Android built with Kotlin and Jetpack Compose.
 
 ---
 
