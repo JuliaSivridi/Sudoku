@@ -113,7 +113,7 @@ fun SudokuGrid(
                             val isDigitMatch = !isPaused && state.selectedDigit != null &&
                                     cell.value != 0 &&
                                     cell.value == state.selectedDigit
-                            val isConflict = !isSolverMode && !isPaused && hasConflict(state.board, row, col)
+                            val isConflict = !isPaused && hasConflict(state.board, row, col)
 
                             val bgColor = when {
                                 isPaused -> Color.Transparent
@@ -140,10 +140,8 @@ fun SudokuGrid(
                                         NotesGrid(notes = cell.notes, isDark = isDark)
                                     } else if (cell.value != 0) {
                                         val textColor = when {
-                                            isSolverMode -> if (isDark) appColors.userNumberDark else appColors.userNumberLight
-                                            cell.isGiven -> if (isDark) GivenNumberDark else GivenNumberLight
-                                            !isSolverMode && hasConflict(state.board, row, col) ->
-                                                if (isDark) ConflictColorDark else ConflictColorLight
+                                            isConflict -> if (isDark) ConflictColorDark else ConflictColorLight
+                                            !isSolverMode && cell.isGiven -> if (isDark) GivenNumberDark else GivenNumberLight
                                             else -> if (isDark) appColors.userNumberDark else appColors.userNumberLight
                                         }
                                         Text(

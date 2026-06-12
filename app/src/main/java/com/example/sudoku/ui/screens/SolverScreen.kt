@@ -96,7 +96,7 @@ fun SolverScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Sudoku grid — solver mode: all digits treated as user digits, no conflict highlighting
+        // Sudoku grid — solver mode: all digits treated as user digits; conflicts highlighted in red
         SudokuGrid(
             state = gameState,
             onCellTap = { row, col -> viewModel.onCellTap(row, col) },
@@ -153,11 +153,10 @@ fun SolverScreen(
             )
         }
 
-        if (state.noSolution || state.hasConflict) {
+        if (state.noSolution) {
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = if (state.hasConflict) "The entered digits conflict with each other"
-                       else "No solution found",
+                text = "No solution found",
                 fontSize = 15.sp,
                 color = if (isDark) ConflictColorDark else ConflictColorLight,
                 fontWeight = FontWeight.SemiBold

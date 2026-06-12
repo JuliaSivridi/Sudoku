@@ -16,7 +16,6 @@ data class SolverState(
     val isClearMode: Boolean = false,
     val isSolved: Boolean = false,
     val noSolution: Boolean = false,
-    val hasConflict: Boolean = false,
     val undoStack: List<List<List<Cell>>> = emptyList()
 )
 
@@ -54,8 +53,7 @@ class SolverViewModel : ViewModel() {
                     board = newBoard,
                     undoStack = undoStack,
                     isSolved = false,
-                    noSolution = false,
-                    hasConflict = false
+                    noSolution = false
                 )
             }
             current.selectedDigit != null && cell.value == 0 -> {
@@ -67,8 +65,7 @@ class SolverViewModel : ViewModel() {
                     board = newBoard,
                     undoStack = undoStack,
                     isSolved = false,
-                    noSolution = false,
-                    hasConflict = false
+                    noSolution = false
                 )
             }
             else -> {
@@ -84,8 +81,7 @@ class SolverViewModel : ViewModel() {
             board = List(9) { List(9) { Cell() } },
             undoStack = undoStack,
             isSolved = false,
-            noSolution = false,
-            hasConflict = false
+            noSolution = false
         )
     }
 
@@ -97,8 +93,7 @@ class SolverViewModel : ViewModel() {
             board = previousBoard,
             undoStack = current.undoStack.dropLast(1),
             isSolved = false,
-            noSolution = false,
-            hasConflict = false
+            noSolution = false
         )
     }
 
@@ -108,17 +103,15 @@ class SolverViewModel : ViewModel() {
         val grid = Array(9) { r -> IntArray(9) { c -> current.board[r][c].value } }
 
         // Введённые цифры конфликтуют между собой? Солвер заполняет только пустые
-        // клетки и сам этого не заметит — «решение» нарушало бы правила судоку
-        if (hasConflicts(grid)) {
-            _state.value = current.copy(hasConflict = true, noSolution = false, isSolved = false)
-            return
-        }
+        // клетки и сам этого не заметит — «решение» нарушало бы правила судоку.
+        // Конфликтующие клетки уже подсвечены красным на поле — просто не решаем.
+        if (hasConflicts(grid)) return
 
         // В фоне: на «вредных» расстановках backtracking может занять секунды
         viewModelScope.launch(Dispatchers.Default) {
             val solvable = SudokuSolver.solve(grid)
             if (!solvable) {
-                _state.value = current.copy(noSolution = true, hasConflict = false, isSolved = false)
+                _state.value = current.copy(noSolution = true, isSolved = false)
                 return@launch
             }
             val undoStack = buildUndoStack(current)
@@ -136,8 +129,7 @@ class SolverViewModel : ViewModel() {
                 board = newBoard,
                 undoStack = undoStack,
                 isSolved = true,
-                noSolution = false,
-                hasConflict = false
+                noSolution = false
             )
         }
     }
