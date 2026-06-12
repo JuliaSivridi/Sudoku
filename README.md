@@ -1,7 +1,7 @@
 # Sudoku
 
 [![Google Play](https://img.shields.io/badge/Google_Play-414141?style=for-the-badge&logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=io.github.juliasivridi.sudoku)
-[![Release v1.4.0](https://img.shields.io/badge/Release-v1.4.0-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JuliaSivridi/Sudoku/releases/latest)
+[![Release v1.5.0](https://img.shields.io/badge/Release-v1.5.0-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JuliaSivridi/Sudoku/releases/latest)
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
 ![Android](https://img.shields.io/badge/Android-34A853?style=for-the-badge&logo=android&logoColor=white)
@@ -34,13 +34,14 @@ A clean, minimal Sudoku app for Android built with Kotlin and Jetpack Compose.
 - Motivational finish screen — a random encouraging message on completion
 
 **⚙️ Optional gameplay settings**
-- **Timer** — shows elapsed mm:ss with a pause button; pausing hides all board digits
+- **Timer** — shows elapsed mm:ss with a pause button; pausing hides all board digits; stops automatically while the app is in the background
 - **Error limit** — end the game after a set number of mistakes; shows a live error counter during play
 - **Hint limit** — cap the number of hints per game; remaining count shown as a badge on the Hint button
 - **Digit count** — show how many of each digit remain to be placed (badge on the number pad)
 
 **🔍 Solver**
 - Enter any puzzle (from a newspaper, another app, etc.) and tap **Solve**
+- Conflicting digits are highlighted in red as you enter them — Solve won't run until the conflicts are fixed
 
 **💾 Save & Continue**
 - Current game saves automatically after every move
@@ -96,3 +97,9 @@ No API keys or external services required — everything runs on-device.
 5. Finish the puzzle and collect your reward 🎉
 
 Use the **Solver** screen to solve any puzzle from a newspaper or another app — enter the given digits and tap **Solve**.
+
+---
+
+## Documentation
+
+- **Technical specification:** [`docs/tech-spec.md`](docs/tech-spec.md)

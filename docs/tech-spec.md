@@ -1,6 +1,6 @@
 # Stler Sudoku — Technical Specification
 
-**Version:** 1.4 (versionCode 6)  
+**Version:** 1.5 (versionCode 7)  
 **Platform:** Android 8.0+ (API 26 – 36)  
 **App ID:** `io.github.juliasivridi.sudoku`  
 **Repository:** github.com/JuliaSivridi/Sudoku  
@@ -100,11 +100,11 @@ Composable re-renders
 1. `StartScreen` calls `GameSaveManager.hasSavedGame()` on composition
 2. If `true`, the Continue button is rendered
 3. On tap, navigates to the `GAME` route with `loadSaved=true`
-4. `GameViewModel.loadSavedGame()` reads JSON and restores `GameState`; if `timerEnabled` is `true`, the timer coroutine is restarted
+4. `GameViewModel.loadSavedGame()` reads JSON and restores `GameState`; if `timerEnabled` is `true`, the timer coroutine is restarted. Returns `false` when the save is missing or corrupt — the corrupt save is cleared and navigation pops back to the Start screen
 
 ### Error handling
 
-- `GameSaveManager`: serialisation errors are silently swallowed; `loadGame()` returns `null` → a fresh game starts instead
+- `GameSaveManager`: serialisation errors are silently swallowed; `loadGame()` returns `null` → `loadSavedGame()` clears the broken save and returns `false`, navigation returns to Start
 - `SudokuGenerator`: `removeCells` only removes a cell after uniqueness is confirmed; every generated puzzle is always valid
 - No network layer → no retry logic needed
 
@@ -230,8 +230,9 @@ Root / CI files:
 | `selectedDigit` | `Int?` | `null` | Active digit `1–9` |
 | `inputMode` | `InputMode` | `NORMAL` | Active input mode |
 | `isComplete` | `Boolean` | `false` | `true` when all 81 cells match the solution |
+| `isLoading` | `Boolean` | `false` | `true` while the puzzle is being generated on `Dispatchers.Default`; GameScreen shows a spinner |
 | `autoNotesActive` | `Boolean` | `false` | `true` while Clues mode is on |
-| `undoStack` | `List<List<List<Cell>>>` | `emptyList()` | Board snapshots; max 50 entries |
+| `undoStack` | `List<UndoEntry>` | `emptyList()` | Snapshots `(board, autoNotesActive)`; max 50 entries |
 | `timerEnabled` | `Boolean` | `false` | Whether the timer is active for this session |
 | `elapsedSeconds` | `Int` | `0` | Seconds elapsed since game start |
 | `isTimerPaused` | `Boolean` | `false` | `true` while timer is paused; board is hidden |
@@ -240,7 +241,11 @@ Root / CI files:
 | `isLost` | `Boolean` | `false` | `true` when `errorCount >= errorLimit > 0` |
 | `hintsRemaining` | `Int` | `-1` | `-1` = unlimited; `0` = exhausted; `>0` = remaining count |
 
-> **Note:** `undoStack` stores board states only — not `inputMode`, `selectedCell`, or `autoNotesActive`. Undoing restores the board layout but leaves the Clues toggle state unchanged (intentional decoupling).
+> **Note:** each `UndoEntry` stores the board **and** the `autoNotesActive` flag, so undoing a Clues toggle restores the button state together with the board. `inputMode` and `selectedCell` are not snapshotted. Spent hints and counted errors are deliberately **not** restored by undo (anti-cheat).
+>
+> ```kotlin
+> data class UndoEntry(val board: List<List<Cell>>, val autoNotesActive: Boolean)
+> ```
 
 > **Note:** All action methods in `GameViewModel` guard with `if (state.isTimerPaused) return` — the board is frozen while paused.
 
@@ -365,7 +370,9 @@ All persistence uses Android `SharedPreferences`. There is no SQLite database, n
 | `"errors"` | `GameState.errorCount` | Int |
 | `"hints_remaining"` | `GameState.hintsRemaining` | Int (`-1` = unlimited) |
 
-**Not serialised:** `selectedCell`, `selectedDigit`, `inputMode`, `isComplete`, `isLost`, `isTimerPaused`, `undoStack`, `autoNotesActive`. All reset to defaults on load.
+**Not serialised:** `selectedCell`, `selectedDigit`, `inputMode`, `isComplete`, `isLost`, `isTimerPaused`, `isLoading`, `undoStack`, `autoNotesActive`. All reset to defaults on load.
+
+> The game is saved on every board change **and** when the app goes to background (`onAppBackground()`), so `elapsedSeconds` accumulated after the last move survives process death.
 
 **Auto-save trigger** (in `GameViewModel.init {}`):
 - Compares current `board` against `lastSavedBoardSnapshot`; save fires only when the board actually changed
@@ -416,9 +423,13 @@ No permissions are requested. No Google Play Services or Firebase dependencies. 
 **Nav args:** `difficulty: String`, `loadSaved: Boolean` (default `false`)  
 **Parameters:** `timerEnabled: Boolean`, `digitCountEnabled: Boolean`, `onGameComplete: ()->Unit`, `onGameLost: ()->Unit`
 
-On `LaunchedEffect(unit)`: if `loadSaved == true` → `viewModel.loadSavedGame()`.  
+On `LaunchedEffect(loadSaved)`: if `loadSaved == true` → `viewModel.loadSavedGame()`; on `false` result navigation pops back to Start.  
 On `LaunchedEffect(state.isComplete)`: if `true` → calls `onGameComplete()`.  
 On `LaunchedEffect(state.isLost)`: if `true` → calls `onGameLost()`.
+
+**Lifecycle:** a `DisposableEffect` registers a `LifecycleEventObserver`: `ON_STOP` → `viewModel.onAppBackground()` (cancels the timer coroutine and saves the game), `ON_START` → `viewModel.onAppForeground()` (restarts the timer if the game is active). Background time is therefore never counted.
+
+**Loading:** while `state.isLoading == true` (puzzle generating on `Dispatchers.Default`) the screen shows a centered `CircularProgressIndicator` instead of the board.
 
 **Header row** (single `Row(fillMaxWidth)`):
 
@@ -473,7 +484,7 @@ Shown when `state.isLost == true` (error count reaches limit). Displays a 😔 e
 **File:** `ui/screens/SolverScreen.kt` · **Route:** `"solver"`  
 **ViewModels:** `SolverViewModel`
 
-The user manually enters digits of an unknown puzzle. All digits are shown in `accent` color (no given/user distinction). `SudokuGrid` is rendered with `isSolverMode=true` — conflict highlighting and row/column highlighting are suppressed. "Solve" button triggers backtracking solver. "No solution found." error text is shown in red when `state.noSolution == true`.
+The user manually enters digits of an unknown puzzle. All digits are shown in `accent` color (no given/user distinction). `SudokuGrid` is rendered with `isSolverMode=true` — row/column highlighting is suppressed, but **conflict highlighting is active**: since every solver digit is a user digit, *both* cells of a conflicting pair turn red (in game mode given cells never turn red). "Solve" first validates the entered digits — if any conflict exists it silently does nothing (the conflicts are already highlighted on the board), otherwise it runs the backtracking solver on `Dispatchers.Default`. "No solution found" error text is shown in red when `state.noSolution == true`.
 
 ---
 
@@ -770,15 +781,15 @@ There are no deeplinks. The app has no `intent-filter` for custom URI schemes.
 | `compileSdk` | `36` |
 | `minSdk` | `26` |
 | `targetSdk` | `36` |
-| `versionCode` | `6` |
-| `versionName` | `"1.4"` |
+| `versionCode` | `7` |
+| `versionName` | `"1.5"` |
 | `isMinifyEnabled` | `false` |
 | Java source/target | `VERSION_11` |
 
 **To trigger a release build:**
 ```
-git tag v1.4.0
-git push origin v1.4.0
+git tag v1.5.0
+git push origin v1.5.0
 ```
 
 ---
@@ -815,6 +826,8 @@ git push origin v<versionName>
 ---
 
 ## 14. Key Algorithms
+
+> Generation (`GameViewModel.startGame`) and solving (`SolverViewModel.solve`) both run on `Dispatchers.Default` — backtracking plus the per-removal uniqueness check can take long enough to jank the UI thread. While generating, `GameState.isLoading = true` and GameScreen shows a spinner.
 
 ### Puzzle Generation
 
@@ -908,6 +921,8 @@ hasConflict(board, row, col):
 
 > If a user places a digit that duplicates a given clue, only the user-placed cell turns red — the given cell is never highlighted as an error.
 
+> The same check runs in **solver mode**: there every digit has `isGiven = false`, so both cells of a conflicting pair are highlighted. `SolverViewModel.solve()` additionally pre-validates the grid with the analogous `hasConflicts()` check and refuses to run while conflicts exist (otherwise the backtracking solver, which only fills *empty* cells, would happily produce a "solution" that violates the rules).
+
 ### Error Detection (Solution-Based)
 
 ```
@@ -966,15 +981,16 @@ cleanNotesAfterPlacement(board, row, col, digit):
 
 ```
 buildUndoStack(state):
-    return (state.undoStack + state.board).takeLast(50)
+    return (state.undoStack + UndoEntry(state.board, state.autoNotesActive)).takeLast(50)
 
 undo():
     if undoStack.isEmpty(): return
-    previousBoard ← undoStack.last()
+    previous ← undoStack.last()
     state ← state.copy(
-        board     = previousBoard,
-        undoStack = undoStack.dropLast(1)
-        // autoNotesActive is NOT changed — toggle is independent
+        board           = previous.board,
+        autoNotesActive = previous.autoNotesActive,   // Clues toggle rolls back with the board
+        undoStack       = undoStack.dropLast(1)
+        // errorCount and hintsRemaining are NOT restored — anti-cheat
     )
 ```
 
@@ -1002,6 +1018,17 @@ startTimerCoroutine():
 
 // On game complete: if timerEnabled → statsManager.updateBestTime(difficulty, elapsedSeconds)
 // timerJob?.cancel() called in ViewModel.onCleared()
+```
+
+**Background handling** (`GameScreen` lifecycle observer → ViewModel):
+
+```
+onAppBackground():           // Lifecycle.Event.ON_STOP
+    timerJob?.cancel()       // no ticking while the app is hidden
+    if game in progress: saveManager.saveGame(state)   // elapsedSeconds survives process death
+
+onAppForeground():           // Lifecycle.Event.ON_START
+    if timerEnabled and game active and timer not running: startTimerCoroutine()
 ```
 
 ### Hint Logic
