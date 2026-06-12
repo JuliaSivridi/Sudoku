@@ -89,8 +89,9 @@ fun AppNavigation(
             val loadSaved = backStackEntry.arguments?.getBoolean("loadSaved") ?: false
 
             LaunchedEffect(loadSaved) {
-                if (loadSaved) {
-                    viewModel.loadSavedGame()
+                if (loadSaved && !viewModel.loadSavedGame()) {
+                    // Сохранение битое или исчезло — возвращаемся на стартовый экран
+                    navController.popBackStack()
                 }
             }
 

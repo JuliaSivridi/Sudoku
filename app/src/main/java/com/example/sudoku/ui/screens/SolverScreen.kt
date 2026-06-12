@@ -153,10 +153,11 @@ fun SolverScreen(
             )
         }
 
-        if (state.noSolution) {
+        if (state.noSolution || state.hasConflict) {
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "No solution found",
+                text = if (state.hasConflict) "The entered digits conflict with each other"
+                       else "No solution found",
                 fontSize = 15.sp,
                 color = if (isDark) ConflictColorDark else ConflictColorLight,
                 fontWeight = FontWeight.SemiBold

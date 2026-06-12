@@ -2,6 +2,12 @@ package com.example.sudoku.model
 
 enum class InputMode { NORMAL, ERASE, NOTES }
 
+// Снимок для отмены: доска + состояние кнопки Clues на момент хода
+data class UndoEntry(
+    val board: List<List<Cell>>,
+    val autoNotesActive: Boolean,
+)
+
 data class GameState(
     val board: List<List<Cell>> = List(9) { List(9) { Cell() } },
     val solution: List<List<Int>> = List(9) { List(9) { 0 } },
@@ -10,8 +16,9 @@ data class GameState(
     val selectedDigit: Int? = null,
     val inputMode: InputMode = InputMode.NORMAL,
     val isComplete: Boolean = false,
+    val isLoading: Boolean = false,
     val autoNotesActive: Boolean = false,
-    val undoStack: List<List<List<Cell>>> = emptyList(),
+    val undoStack: List<UndoEntry> = emptyList(),
     // Таймер
     val timerEnabled: Boolean = false,
     val elapsedSeconds: Int = 0,

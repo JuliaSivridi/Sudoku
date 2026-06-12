@@ -10,6 +10,8 @@ import com.example.sudoku.model.Cell
 import com.example.sudoku.model.Difficulty
 import com.example.sudoku.model.GameState
 import com.example.sudoku.model.InputMode
+import com.example.sudoku.model.UndoEntry
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,24 +69,34 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         statsRecorded = false
         lastSavedBoardSnapshot = null
         timerJob?.cancel()
-        val (board, solution) = SudokuGenerator.generate(difficulty)
-        _state.value = GameState(
-            board = board,
-            solution = solution,
-            difficulty = difficulty,
-            timerEnabled = timerEnabled,
-            errorLimit = errorLimit,
-            hintsRemaining = if (hintLimit > 0) hintLimit else -1,
-        )
-        if (timerEnabled) startTimerCoroutine()
+        // Показываем спиннер сразу, генерируем в фоне: backtracking + проверка
+        // уникальности на каждое удаление могут подвесить UI-поток
+        _state.value = GameState(difficulty = difficulty, isLoading = true)
+        viewModelScope.launch(Dispatchers.Default) {
+            val (board, solution) = SudokuGenerator.generate(difficulty)
+            _state.value = GameState(
+                board = board,
+                solution = solution,
+                difficulty = difficulty,
+                timerEnabled = timerEnabled,
+                errorLimit = errorLimit,
+                hintsRemaining = if (hintLimit > 0) hintLimit else -1,
+            )
+            if (timerEnabled) startTimerCoroutine()
+        }
     }
 
-    // Загрузить сохранённую игру
-    fun loadSavedGame() {
+    // Загрузить сохранённую игру. false = сохранение отсутствует или битое.
+    fun loadSavedGame(): Boolean {
         statsRecorded = false
         lastSavedBoardSnapshot = null
         timerJob?.cancel()
-        val loaded = saveManager.loadGame() ?: return
+        val loaded = saveManager.loadGame()
+        if (loaded == null) {
+            // Битый JSON: убираем сохранение, чтобы кнопка Continue не вела в пустую игру
+            saveManager.clearSavedGame()
+            return false
+        }
         _state.value = loaded.copy(
             selectedCell = null,
             selectedDigit = null,
@@ -94,6 +106,25 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             undoStack = emptyList()
         )
         if (loaded.timerEnabled) startTimerCoroutine()
+        return true
+    }
+
+    // Приложение свёрнуто: останавливаем таймер (фоновое время не считается)
+    // и сохраняем игру, чтобы не потерять секунды после последнего хода
+    fun onAppBackground() {
+        timerJob?.cancel()
+        val s = _state.value
+        val inProgress = !s.isComplete && !s.isLost && !s.isLoading &&
+            s.solution.any { row -> row.any { it != 0 } }
+        if (inProgress) saveManager.saveGame(s)
+    }
+
+    // Приложение снова на экране: перезапускаем таймер, если игра активна
+    fun onAppForeground() {
+        val s = _state.value
+        if (s.timerEnabled && !s.isComplete && !s.isLost && timerJob?.isActive != true) {
+            startTimerCoroutine()
+        }
     }
 
     // Таймер: тикает каждую секунду пока игра активна и не на паузе
@@ -301,9 +332,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val current = _state.value
         if (current.isTimerPaused) return
         if (current.undoStack.isEmpty()) return
-        val previousBoard = current.undoStack.last()
+        val previous = current.undoStack.last()
         _state.value = current.copy(
-            board = previousBoard,
+            board = previous.board,
+            autoNotesActive = previous.autoNotesActive,
             undoStack = current.undoStack.dropLast(1),
             isComplete = false
         )
@@ -422,9 +454,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         return true
     }
 
-    // Построить стек отмены: добавить текущую доску, ограничить глубину 50
-    private fun buildUndoStack(state: GameState): List<List<List<Cell>>> =
-        (state.undoStack + listOf(state.board)).takeLast(50)
+    // Построить стек отмены: добавить текущий снимок, ограничить глубину 50
+    private fun buildUndoStack(state: GameState): List<UndoEntry> =
+        (state.undoStack + UndoEntry(state.board, state.autoNotesActive)).takeLast(50)
 
     // Проверить завершение игры
     private fun checkComplete(state: GameState): Boolean {
